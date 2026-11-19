@@ -26,7 +26,21 @@
             "tools": {"$ref": "#/$defs/names", "description": "Every tool name the server lists."},
             "read_only": {"$ref": "#/$defs/names", "description": "The tools that change nothing. Each must be in tools."},
             "approval_gated": {"$ref": "#/$defs/names", "description": "The tools that wait for the person's approval in the app before acting. Each must be in tools."},
-            "transports": {"type": "array", "items": {"enum": ["stdio", "http"]}, "uniqueItems": true, "minItems": 1}
+            "transports": {"type": "array", "items": {"enum": ["stdio", "http"]}, "uniqueItems": true, "minItems": 1},
+            "dispatch": {
+              "type": "array",
+              "minItems": 1,
+              "description": "Optional. Tools that run many commands or tools by name, so the app offers more than tools lists. Left out when no tool does.",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["tool", "reaches"],
+                "properties": {
+                  "tool": {"$ref": "#/$defs/name", "description": "The dispatching tool; it must be in tools, once."},
+                  "reaches": {"type": "integer", "minimum": 1, "description": "How many commands or tools it can run that tools does not list."}
+                }
+              }
+            }
           }
         }
       ]

@@ -56,6 +56,18 @@ Each app will write `agents/manifest.json` with its own `agents sync` and keep i
 }
 ```
 
-Rules: every key is required and no other key is allowed. `app` is the registry name. `mcp` is `null` when the app has no MCP server; otherwise `tools` lists every tool name the server lists, `read_only` the ones that change nothing, `approval_gated` the ones that wait for the person's approval in the app (both subsets of `tools`), and `transports` one or both of `stdio` and `http`. `skills` lists each skill folder the app ships with the names of its sub-skills (empty list for none). `dock.positions` uses `left`, `right`, `bottom`, `floating`; `dock.tabs` names the dock's tabs. `extensions` is `null` unless the app hosts form.ext extensions, then the host API version it implements. Names are `[A-Za-z0-9][A-Za-z0-9._-]*`, at most 80 characters, each once per list.
+Rules: every key is required and no other key is allowed, except the one optional field `mcp.dispatch` (below). `app` is the registry name. `mcp` is `null` when the app has no MCP server; otherwise `tools` lists every tool name the server lists, `read_only` the ones that change nothing, `approval_gated` the ones that wait for the person's approval in the app (both subsets of `tools`), and `transports` one or both of `stdio` and `http`. `skills` lists each skill folder the app ships with the names of its sub-skills (empty list for none). `dock.positions` uses `left`, `right`, `bottom`, `floating`; `dock.tabs` names the dock's tabs. `extensions` is `null` unless the app hosts form.ext extensions, then the host API version it implements. Names are `[A-Za-z0-9][A-Za-z0-9._-]*`, at most 80 characters, each once per list.
 
-The spec carries counts, not the lists: `mcp.tools`, `mcp.read_only`, `mcp.approval_gated` (numbers) and `mcp.transports`; `skills.count`, `skills.sub_skills` (total) and `skills.names`; `dock.present`, `dock.positions` and `dock.tabs` (number); `extensions.host_api`.
+### `mcp.dispatch`: tools that run many commands
+
+Some apps put most of what they offer behind one tool that takes a command or tool name (formlit's `run_command`, formdesign's `use_tool`), so `mcp.tools` alone says little of what the app can do. Such an app may add `mcp.dispatch`, a non-empty list with one object per dispatching tool:
+
+```json
+"dispatch": [{"tool": "run_command", "reaches": 289}]
+```
+
+`tool` is the dispatching tool's name; it must be in `mcp.tools`, once. `reaches` is a whole number of at least 1: how many commands or tools it can run that `mcp.tools` does not list. Like every other field it is written by the app's sync from its own registry of commands, never typed. An app with no such tool leaves the field out (not an empty list); a manifest without it stays valid and means the same as before.
+
+### What the spec takes from the manifest
+
+The spec carries counts, not the lists: `mcp.tools`, `mcp.read_only`, `mcp.approval_gated` (numbers) and `mcp.transports`, and `mcp.dispatch` as the same list of `tool` and `reaches`, present only when the manifest has it; `skills.count`, `skills.sub_skills` (total) and `skills.names`; `dock.present`, `dock.positions` and `dock.tabs` (number); `extensions.host_api`.

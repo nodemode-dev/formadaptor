@@ -40,6 +40,21 @@ def part(doc, section, key):
     return [str(v) for v in value] if isinstance(value, list) else []
 
 
+def dispatch_of(doc):
+    block = doc.get("mcp") if isinstance(doc, dict) else None
+    rows = block.get("dispatch") if isinstance(block, dict) else None
+    return {str(r.get("tool")): r.get("reaches") for r in rows or [] if isinstance(r, dict)}
+
+
+def dispatch_moved(old, new):
+    before, after = dispatch_of(old), dispatch_of(new)
+    found = moved("dispatching tools", list(before), list(after))
+    for tool in after:
+        if tool in before and before[tool] != after[tool]:
+            found.append(f"{tool} reaches {after[tool]} instead of {before[tool]}")
+    return found
+
+
 def skills_of(doc):
     rows = doc.get("skills") if isinstance(doc, dict) else None
     return {str(s.get("name")): [str(x) for x in s.get("sub_skills") or []] for s in rows or [] if isinstance(s, dict)}
@@ -51,6 +66,7 @@ def manifest_differences(old, new):
         found.append("adds an MCP server" if old.get("mcp") is None else "drops its MCP server")
     for section, key, label in LISTS:
         found += moved(label, part(old, section, key), part(new, section, key))
+    found += dispatch_moved(old, new)
     before, after = skills_of(old), skills_of(new)
     found += moved("skills", list(before), list(after))
     for name in after:

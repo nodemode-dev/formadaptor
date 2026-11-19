@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from conftest import client
+from conftest import FIXTURES, client, contents
 
 import registry
 import spec
@@ -36,6 +36,21 @@ def test_public_apps_carry_ids_release_and_manifest_counts(compiler, routes):
     assert vis["manifest"]["skills"] == {"count": 1, "sub_skills": 3, "names": ["formvis-harness"]}
     assert doc["source"] == {"repository": "nodemode-dev/formcompiler", "registry_version": "0.16.0"}
     assert doc["content_sha256"] == spec.content_hash(doc)
+
+
+def test_the_spec_carries_dispatch_only_when_the_manifest_has_it(compiler, routes):
+    plain, _ = built(compiler, routes)
+    mcp = {a["id"]: a for a in plain["apps"]}["formvis"]["manifest"]["mcp"]
+    assert mcp == {"tools": 4, "read_only": 1, "approval_gated": 1, "transports": ["http", "stdio"]}
+    later = json.loads((FIXTURES / "manifest.formvis.json").read_text())
+    later["mcp"]["dispatch"] = [{"tool": "apply_filter", "reaches": 289}]
+    routes["/repos/nodemode-dev/formvis/contents/agents/manifest.json?ref=v2.3.5"] = contents(json.dumps(later))
+    doc, _ = built(compiler, routes)
+    changed = {a["id"]: a for a in doc["apps"]}["formvis"]
+    assert changed["manifest"]["mcp"]["dispatch"] == [{"tool": "apply_filter", "reaches": 289}]
+    assert {k: v for k, v in changed["manifest"]["mcp"].items() if k != "dispatch"} == mcp
+    assert doc["content_sha256"] != plain["content_sha256"]
+    assert spec.changes(plain, doc) != []
 
 
 def test_state_is_the_registry_catalog_state_whatever_the_release_says(compiler, routes):

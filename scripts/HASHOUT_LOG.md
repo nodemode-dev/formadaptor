@@ -3,7 +3,7 @@
 Living log of all comment content, explainers, rationale, TODOs and removed code for the adaptor (the scripts and the workflows). The source files stay comment-free per dev-rules `sub-skills/hashout-log/SUB-SKILL.md`; everything they would have said lives here, indexed. Read this first, then edit code surgically.
 
 Current build version: v0.1.0
-Last updated: 2026-11-19 · form.ext on and profile off in targets.json (v0.1.0)
+Last updated: 2026-11-19 · form.ext on and profile off in targets.json, mcp.dispatch in the agent manifest (v0.1.0)
 
 ### github_api.py · one client, one transport, nothing global
 - refers-to: scripts/github_api.py :: GitHub, urllib_transport, file_at, asset
@@ -60,13 +60,24 @@ Run 2026-11-18 against the fake server: formvis gave 2.3.5 with its skill list, 
 - kind: feature
 - logged: v0.1.0 · 2026-11-18
 
-No app ships `agents/manifest.json` yet. The spec builder reads it at the release tag and, when it is missing (404), leaves the app's `manifest` block out instead of guessing counts from `form-app.json` or the registry. The owner's wording: counts are then left out rather than guessed.
+When this was written no app shipped `agents/manifest.json`; nineteen do now (see the dispatch entry below). The spec builder reads it at the release tag and, when it is missing (404), leaves the app's `manifest` block out instead of guessing counts from `form-app.json` or the registry. The owner's wording: counts are then left out rather than guessed.
 
 The lists in the manifest are names, not numbers (`mcp.tools`, `mcp.read_only`, `mcp.approval_gated`, `dock.tabs`, each skill's `sub_skills`), so an app's own `--check` can compare them with its code and a reader can see which tool is gated; the spec carries the counts. `read_only` and `approval_gated` must be subsets of `tools`.
 
 `problems_of` is a hand-written check of the same rules as `spec/agent-manifest.schema.json`, because the scripts use the standard library only (no jsonschema). The two must change together. `manifest.py check FILE --app NAME` is there for an app's own sync step to call. A manifest that breaks a rule, is not JSON, or answers a 4xx other than 404 gives a warning and no counts; a 5xx or no answer stops the build, as visibility does.
 
 Run 2026-11-18: a sample formvis manifest passed `check` (rc 0) and `counts` gave 4 tools, 1 read-only, 1 gated, 1 skill with 3 sub-skills, a dock on two sides with 2 tabs, host API 1; a broken copy named four problems (unknown field, wrong app, a read-only tool not in tools, an unknown dock position) and exited 1. Against the fake server, formvis's manifest at v2.3.5 gave the counts, formcut's broken one a warning and `None`, formtray's missing one `None` with no warning.
+
+### manifest.py · mcp.dispatch says what one dispatching tool reaches
+- refers-to: scripts/manifest.py :: dispatch_problems, mcp_counts, exact; scripts/advisory.py :: dispatch_of, dispatch_moved; spec/agent-manifest.schema.json :: mcp.dispatch; spec/family.schema.json :: manifest.mcp.dispatch; docs/SPEC.md :: mcp.dispatch
+- kind: feature
+- logged: v0.1.0 · 2026-11-19
+
+Two apps put most of what they offer behind one tool that takes a command or tool name: formlit (289 commands behind `run_command`, in a list of 82 tools) and formdesign (41 layout tools behind `use_tool`, in a list of 38). The manifest had nowhere to say so, so the family spec under-described both. One optional field is added to `mcp`: `dispatch`, a non-empty list of `{"tool": <name in mcp.tools>, "reaches": <whole number, at least 1>}`, one object per dispatching tool, each tool once. The name says what it is (a tool that dispatches) and `reaches` says what the number counts (commands or tools it can run that `mcp.tools` does not list). It is left out, not empty, when no tool dispatches, so every existing manifest validates unchanged and means what it meant.
+
+`exact` gained an `optional` set so the one field can be missing while every other unknown key is still refused; the schema keeps `dispatch` out of `required`, and `problems_of` and the schema were changed together as before. `counts` copies `dispatch` into the spec's `manifest.mcp` only when the manifest has it, as the same `tool` and `reaches` pairs, so the shape of the spec does not change for any app without one: no key is added, nothing is null, and the content hash of a spec built from manifests without it is the same as before. The spec's schema allows the key. The advisory check names a dispatching tool main adds or drops and a changed `reaches`. No app's manifest was edited: each app's own sync writes the field from its own command registry (no number is typed), and the spec shows it once an app has released a manifest that carries it.
+
+Run 2026-11-19: the checker over the nineteen `agents/manifest.json` files in the clones (form.ext, form.md, formAT, formPDF, formVFX, formcel, formcut, formdeck, formdesign, formencoder, formlit, formpath, formportal, formref, formtools, formtxt, formvis, formwav, formweb), each with `--app` its own registry name: all nineteen pass, before and after the change. A copy of formlit's with `dispatch: [{"tool": "run_command", "reaches": 289}]` passes and `counts` shows it; an empty list, an unknown tool, `reaches` 0, true or 2.5, a tool twice, a missing `reaches` and an extra key each fail with a named problem. The JSON schemas were also run through a real validator (jsonschema, outside this repository's tests): the nineteen files and the dispatch copy validate against the manifest schema, the sample family spec validates against the family schema with and without the dispatch counts.
 
 ### spec.py · family.json, its content hash, and the spec branch
 - refers-to: scripts/spec.py :: build, public_app, content_hash, changes, title, fetch, publish; spec/family.schema.json; docs/SPEC.md

@@ -91,7 +91,17 @@
                     "tools": {"type": "integer", "minimum": 0},
                     "read_only": {"type": "integer", "minimum": 0},
                     "approval_gated": {"type": "integer", "minimum": 0},
-                    "transports": {"type": "array", "items": {"type": "string"}}
+                    "transports": {"type": "array", "items": {"type": "string"}},
+                    "dispatch": {
+                      "type": "array",
+                      "description": "Left out unless the app's manifest has mcp.dispatch.",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["tool", "reaches"],
+                        "properties": {"tool": {"type": "string"}, "reaches": {"type": "integer", "minimum": 1}}
+                      }
+                    }
                   }
                 }
               ]

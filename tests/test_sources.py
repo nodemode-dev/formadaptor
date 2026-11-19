@@ -116,6 +116,52 @@ def test_an_app_without_mcp_or_extensions_is_valid():
     assert manifest.counts(doc)["mcp"] is None
 
 
+def dispatching():
+    doc = json.loads((FIXTURES / "manifest.formvis.json").read_text())
+    doc["mcp"]["dispatch"] = [{"tool": "apply_filter", "reaches": 289}]
+    return doc
+
+
+def test_a_manifest_with_dispatch_passes_and_its_counts_carry_it():
+    doc = dispatching()
+    assert manifest.problems_of(doc, "formvis") == []
+    assert manifest.counts(doc)["mcp"] == {
+        "tools": 4, "read_only": 1, "approval_gated": 1, "transports": ["http", "stdio"],
+        "dispatch": [{"tool": "apply_filter", "reaches": 289}],
+    }
+    schema = json.loads((REPO / "spec" / "agent-manifest.schema.json").read_text())
+    assert schema["properties"]["mcp"]["oneOf"][1]["properties"]["dispatch"]["items"]["required"] == ["tool", "reaches"]
+    assert "dispatch" not in schema["properties"]["mcp"]["oneOf"][1]["required"]
+
+
+def test_a_manifest_without_dispatch_counts_exactly_as_before():
+    doc = json.loads((FIXTURES / "manifest.formvis.json").read_text())
+    assert "dispatch" not in manifest.counts(doc)["mcp"]
+
+
+@pytest.mark.parametrize("rows, problem", [
+    ([], "mcp.dispatch must be a non-empty list, or left out"),
+    ("run_command", "mcp.dispatch must be a non-empty list, or left out"),
+    ([{"tool": "nope", "reaches": 3}], "mcp.dispatch[0].tool names 'nope', which is not in mcp.tools"),
+    ([{"tool": "apply_filter", "reaches": 0}], "mcp.dispatch[0].reaches must be a whole number of at least 1"),
+    ([{"tool": "apply_filter", "reaches": True}], "mcp.dispatch[0].reaches must be a whole number of at least 1"),
+    ([{"tool": "apply_filter", "reaches": 2.5}], "mcp.dispatch[0].reaches must be a whole number of at least 1"),
+    ([{"tool": "apply_filter", "reaches": 2}, {"tool": "apply_filter", "reaches": 3}], "mcp.dispatch[1].tool 'apply_filter' is listed twice"),
+    ([{"tool": "apply_filter"}], "mcp.dispatch[0].reaches is missing"),
+    ([{"tool": "apply_filter", "reaches": 2, "note": "x"}], "mcp.dispatch[0].note is not a manifest field"),
+])
+def test_a_bad_dispatch_names_the_problem(rows, problem):
+    doc = dispatching()
+    doc["mcp"]["dispatch"] = rows
+    assert manifest.problems_of(doc, "formvis") == [problem]
+
+
+def test_dispatch_is_not_allowed_beside_other_unknown_fields():
+    doc = dispatching()
+    doc["mcp"]["extra"] = 1
+    assert manifest.problems_of(doc) == ["mcp.extra is not a manifest field"]
+
+
 def test_manifest_read_missing_broken_and_down(routes, capsys):
     gh, _ = client(routes)
     assert manifest.read(gh, "formvis", "v2.3.5", "formvis")["mcp"]["tools"] == 4

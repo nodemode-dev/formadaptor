@@ -26,15 +26,37 @@ def names(value, where, problems):
     return value
 
 
-def exact(value, keys, where, problems):
+def exact(value, keys, where, problems, optional=frozenset()):
     if not isinstance(value, dict):
         problems.append(f"{where} must be an object")
         return False
-    for k in sorted(set(value) - keys):
+    for k in sorted(set(value) - keys - optional):
         problems.append(f"{where}.{k} is not a manifest field")
     for k in sorted(keys - set(value)):
         problems.append(f"{where}.{k} is missing")
     return keys <= set(value)
+
+
+def dispatch_problems(dispatch, tools, problems):
+    if not isinstance(dispatch, list) or not dispatch:
+        problems.append("mcp.dispatch must be a non-empty list, or left out")
+        return
+    seen = set()
+    for i, row in enumerate(dispatch):
+        where = f"mcp.dispatch[{i}]"
+        if not exact(row, {"tool", "reaches"}, where, problems):
+            continue
+        tool, reaches = row["tool"], row["reaches"]
+        if not isinstance(tool, str) or not NAME.match(tool):
+            problems.append(f"{where}.tool must be a name")
+        elif tool not in tools:
+            problems.append(f"{where}.tool names {tool!r}, which is not in mcp.tools")
+        elif tool in seen:
+            problems.append(f"{where}.tool {tool!r} is listed twice")
+        else:
+            seen.add(tool)
+        if not isinstance(reaches, int) or isinstance(reaches, bool) or reaches < 1:
+            problems.append(f"{where}.reaches must be a whole number of at least 1")
 
 
 def problems_of(doc, app=None):
@@ -48,8 +70,10 @@ def problems_of(doc, app=None):
     if app is not None and doc["app"] != app:
         problems.append(f"app is {doc['app']!r}, the registry name is {app!r}")
     mcp = doc["mcp"]
-    if mcp is not None and exact(mcp, {"tools", "read_only", "approval_gated", "transports"}, "mcp", problems):
+    if mcp is not None and exact(mcp, {"tools", "read_only", "approval_gated", "transports"}, "mcp", problems, {"dispatch"}):
         tools = set(names(mcp["tools"], "mcp.tools", problems))
+        if "dispatch" in mcp:
+            dispatch_problems(mcp["dispatch"], tools, problems)
         for key in ("read_only", "approval_gated"):
             for name in names(mcp[key], f"mcp.{key}", problems):
                 if name not in tools:
@@ -85,15 +109,22 @@ def problems_of(doc, app=None):
     return problems
 
 
+def mcp_counts(mcp):
+    found = {
+        "tools": len(mcp["tools"]),
+        "read_only": len(mcp["read_only"]),
+        "approval_gated": len(mcp["approval_gated"]),
+        "transports": sorted(mcp["transports"]),
+    }
+    if "dispatch" in mcp:
+        found["dispatch"] = [{"tool": row["tool"], "reaches": row["reaches"]} for row in mcp["dispatch"]]
+    return found
+
+
 def counts(doc):
     mcp = doc["mcp"]
     return {
-        "mcp": None if mcp is None else {
-            "tools": len(mcp["tools"]),
-            "read_only": len(mcp["read_only"]),
-            "approval_gated": len(mcp["approval_gated"]),
-            "transports": sorted(mcp["transports"]),
-        },
+        "mcp": None if mcp is None else mcp_counts(mcp),
         "skills": {
             "count": len(doc["skills"]),
             "sub_skills": sum(len(s["sub_skills"]) for s in doc["skills"]),

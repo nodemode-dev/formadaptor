@@ -47,6 +47,16 @@ def test_main_that_changes_tools_sub_skills_and_skill_folders_is_named():
         "adds tools crop_image", "drops approval-gated tools export_image", "drops sub-skills of formvis-harness: export", "adds skill folders formvis-export"])]
 
 
+def test_main_that_adds_or_changes_a_dispatching_tool_is_named():
+    old = json.loads(json.dumps(VIS))
+    old["mcp"]["dispatch"] = [{"tool": "apply_filter", "reaches": 289}]
+    later = json.loads(json.dumps(VIS))
+    later["mcp"]["dispatch"] = [{"tool": "apply_filter", "reaches": 300}, {"tool": "export_image", "reaches": 4}]
+    assert advisory.manifest_differences(VIS, later) == ["adds dispatching tools apply_filter, export_image"]
+    assert advisory.manifest_differences(old, later) == ["adds dispatching tools export_image", "apply_filter reaches 300 instead of 289"]
+    assert advisory.manifest_differences(later, VIS) == ["drops dispatching tools apply_filter, export_image"]
+
+
 def test_a_manifest_that_appears_or_breaks_on_main_is_named_and_a_failure_does_not_stop_the_others():
     gh, _ = client({
         "/repos/nodemode-dev/formcut/contents/agents/manifest.json?ref=main": contents(json.dumps(dict(VIS, app="formcut"))),
