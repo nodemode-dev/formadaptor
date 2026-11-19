@@ -11,5 +11,6 @@ files in step with it.
 
 The scripts use the Python standard library only. The workflows call
 third-party GitHub Actions under their own licences, run on CI runners only and
-never distributed: actions/checkout and actions/create-github-app-token (MIT),
-and rhysd/actionlint in the self-check (MIT).
+never distributed: actions/checkout, actions/upload-artifact,
+actions/download-artifact and actions/create-github-app-token (MIT), and
+rhysd/actionlint in the self-check (MIT).

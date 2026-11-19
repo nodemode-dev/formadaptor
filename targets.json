@@ -1,0 +1,42 @@
+{
+  "format": "formadaptor-targets",
+  "format_version": 1,
+  "targets": [
+    {
+      "name": "formmcp",
+      "repository": "nodemode-dev/formMCP",
+      "enabled": true,
+      "command": ["python3", "-I", "setup/family.py"],
+      "files": ["core/data/family.json", "setup/family.spec.json"],
+      "spec_copy": "setup/family.spec.json",
+      "branch_prefix": "bot/formadaptor-"
+    },
+    {
+      "name": "formskills",
+      "repository": "nodemode-dev/formskills",
+      "enabled": true,
+      "command": ["python3", "-I", "setup/apps.py"],
+      "files": ["core/data/apps.json", "setup/family.spec.json"],
+      "spec_copy": "setup/family.spec.json",
+      "branch_prefix": "bot/formadaptor-"
+    },
+    {
+      "name": "profile",
+      "repository": "nodemode-dev/.github",
+      "enabled": false,
+      "command": ["python3", "-I", "scripts/apps_table.py"],
+      "files": ["profile/README.md", "scripts/family.spec.json"],
+      "spec_copy": "scripts/family.spec.json",
+      "branch_prefix": "bot/formadaptor-"
+    },
+    {
+      "name": "formext",
+      "repository": "nodemode-dev/form.ext",
+      "enabled": true,
+      "command": ["python3", "-I", "setup/hosts.py"],
+      "files": [".claude/skills/HOSTS.md", "setup/hosts.json", "setup/family.spec.json"],
+      "spec_copy": "setup/family.spec.json",
+      "branch_prefix": "bot/formadaptor-"
+    }
+  ]
+}

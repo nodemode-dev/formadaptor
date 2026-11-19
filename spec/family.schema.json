@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/nodemode-dev/formadaptor/blob/main/spec/family.schema.json",
+  "title": "Form family spec",
+  "description": "family.json on formadaptor's spec branch. See docs/SPEC.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "format_version", "generated", "source", "content_sha256", "apps"],
+  "properties": {
+    "format": {"const": "formai-family"},
+    "format_version": {"const": 1},
+    "generated": {"type": "string", "format": "date-time", "description": "When the file was built. Not part of content_sha256; a generator never copies it."},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "registry_version"],
+      "properties": {
+        "repository": {"const": "nodemode-dev/formcompiler"},
+        "registry_version": {"type": "string", "description": "formcompiler's VERSION at the registry that was read."}
+      }
+    },
+    "content_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "SHA-256 of the file without generated and content_sha256, keys sorted, no spaces."},
+    "apps": {
+      "type": "array",
+      "description": "Every enabled registry entry, sorted by id.",
+      "items": {"oneOf": [{"$ref": "#/$defs/private"}, {"$ref": "#/$defs/public"}]}
+    }
+  },
+  "$defs": {
+    "private": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "public"],
+      "properties": {"id": {"type": "string"}, "public": {"const": false}}
+    },
+    "public": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "public", "app", "repo", "repository", "site", "name", "kind", "summary", "licence", "state", "launcher", "agents", "release"],
+      "properties": {
+        "id": {"type": "string", "description": "The catalogue id."},
+        "public": {"const": true},
+        "app": {"type": "string", "description": "The registry name."},
+        "repo": {"type": "string", "description": "The repository name in nodemode-dev."},
+        "repository": {"type": "string", "pattern": "^nodemode-dev/[A-Za-z0-9._-]+$"},
+        "site": {"type": "string", "description": "The path on formai.studio."},
+        "name": {"type": "string"},
+        "kind": {"type": "string"},
+        "summary": {"type": "string"},
+        "licence": {"type": "string"},
+        "state": {"enum": ["prelaunch", "public", "live"]},
+        "launcher": {"type": "string"},
+        "agents": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mcp", "skills"],
+          "properties": {"mcp": {"type": "boolean"}, "skills": {"type": "string"}}
+        },
+        "release": {
+          "description": "The newest published, non-draft, stable, non-yanked release, or null.",
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["version", "tag", "published", "url"],
+              "properties": {
+                "version": {"type": "string"},
+                "tag": {"type": "string"},
+                "published": {"type": "string"},
+                "url": {"type": "string"},
+                "skills": {"type": "array", "items": {"type": "string"}, "description": "Skill folders listed in the release's form-app.json, when it has one."}
+              }
+            }
+          ]
+        },
+        "manifest": {
+          "type": "object",
+          "description": "Counts from agents/manifest.json at the release tag. Left out when the app has no such file.",
+          "additionalProperties": false,
+          "required": ["mcp", "skills", "dock", "extensions"],
+          "properties": {
+            "mcp": {
+              "oneOf": [
+                {"type": "null"},
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["tools", "read_only", "approval_gated", "transports"],
+                  "properties": {
+                    "tools": {"type": "integer", "minimum": 0},
+                    "read_only": {"type": "integer", "minimum": 0},
+                    "approval_gated": {"type": "integer", "minimum": 0},
+                    "transports": {"type": "array", "items": {"type": "string"}},
+                    "dispatch": {
+                      "type": "array",
+                      "description": "Left out unless the app's manifest has mcp.dispatch.",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["tool", "reaches"],
+                        "properties": {"tool": {"type": "string"}, "reaches": {"type": "integer", "minimum": 1}}
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "skills": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["count", "sub_skills", "names"],
+              "properties": {
+                "count": {"type": "integer", "minimum": 0},
+                "sub_skills": {"type": "integer", "minimum": 0},
+                "names": {"type": "array", "items": {"type": "string"}}
+              }
+            },
+            "dock": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["present", "positions", "tabs"],
+              "properties": {
+                "present": {"type": "boolean"},
+                "positions": {"type": "array", "items": {"type": "string"}},
+                "tabs": {"type": "integer", "minimum": 0}
+              }
+            },
+            "extensions": {
+              "oneOf": [
+                {"type": "null"},
+                {"type": "object", "additionalProperties": false, "required": ["host_api"], "properties": {"host_api": {"type": "string"}}}
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
