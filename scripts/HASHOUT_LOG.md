@@ -41,3 +41,16 @@ The owner's rule: public lists carry only apps whose repository is public. `GET 
 One exception, on purpose: a 429, a 5xx, a 403 with `x-ratelimit-remaining: 0` or no answer at all stops the build with `ApiError`. Read as "private", a GitHub outage would build a spec with every app private, publish it, and propose pull requests that empty every target's list. Stopping keeps the published spec as it was until the next hourly run.
 
 Run 2026-11-18 against the fake server on 127.0.0.1:25101 built from the clones: formvis and formcut answered public, formfabric and formREC (no clone, so 404) private.
+
+### releases.py · the newest published stable release that is not yanked
+- refers-to: scripts/releases.py :: newest, latest, load_yanked, form_app_skills
+- kind: feature
+- logged: v0.1.0 · 2026-11-18
+
+The owner's decision: the spec follows released tags. `newest` takes, from the app repository's own releases, those that are not drafts, not prereleases and tagged `v<x.y.z>` with no prerelease part, drops every `(app, version)` in formcompiler's `yanked.json` (the same rows and the same shape check as formcompiler's `yank.load`), and keeps the highest by integer parts. This is the catalogue's stable channel in `catalog.py`; betas are left to the catalogue.
+
+formcompiler's `releases.json` was not used as the source: it is the signed catalogue the private publishing pipeline writes after a release, so it lags a publish by one pipeline run, and it already leaves out private repositories by its own rule. Asking the repository directly is one call per public app and has no lag. A repository whose releases answer 404 has no release (`None`), and the app is listed with `release: null`.
+
+`form_app_skills` reads the release's `form-app.json` asset (format_version 2, formcompiler `docs/REGISTRY.md`, `agents`) and keeps the skill folder names. An asset that cannot be read, or names another app or version, is left out with a warning rather than stopping the family.
+
+Run 2026-11-18 against the fake server: formvis gave 2.3.5 with its skill list, past a newer draft and a newer beta; formtray gave 0.16.2 with no skills (it has no skills folder); formfabric (404) gave `None`; with formvis 2.3.5 marked yanked it fell back to the older 0.1.0. The yanked set read from the formcompiler clone holds formfabric 0.25.1, formsculpt 1.21.0 and formsurface 0.62.1.
