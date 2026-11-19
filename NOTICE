@@ -1,0 +1,15 @@
+formadaptor
+Copyright 2026 NodeAgentc, Inc.
+https://github.com/nodemode-dev/formadaptor
+
+This product is licensed under the GNU General Public License v3.0 (SPDX GPL-3.0-only, see LICENSE).
+
+The adaptor is an original work of nodemode-ai: one family spec built from
+formcompiler's registry, each repository's visibility and each public app's
+released tag, and pull requests that keep every target repository's generated
+files in step with it.
+
+The scripts use the Python standard library only. The workflows call
+third-party GitHub Actions under their own licences, run on CI runners only and
+never distributed: actions/checkout and actions/create-github-app-token (MIT),
+and rhysd/actionlint in the self-check (MIT).
