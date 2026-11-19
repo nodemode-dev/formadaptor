@@ -1,0 +1,46 @@
+{
+  "format": "formadaptor-targets",
+  "format_version": 1,
+  "targets": [
+    {
+      "name": "formmcp",
+      "repository": "nodemode-dev/formMCP",
+      "enabled": true,
+      "command": ["python3", "-I", "setup/family.py"],
+      "files": ["core/data/family.json"],
+      "branch_prefix": "bot/formadaptor-"
+    },
+    {
+      "name": "formskills",
+      "repository": "nodemode-dev/formskills",
+      "enabled": true,
+      "command": ["python3", "-I", "setup/apps.py"],
+      "files": ["core/data/apps.json"],
+      "branch_prefix": "bot/formadaptor-"
+    },
+    {
+      "name": "profile",
+      "repository": "nodemode-dev/.github",
+      "enabled": true,
+      "command": ["python3", "-I", "scripts/apps_table.py"],
+      "files": ["profile/README.md"],
+      "branch_prefix": "bot/formadaptor-"
+    },
+    {
+      "name": "formtray",
+      "repository": "nodemode-dev/formtray",
+      "enabled": false,
+      "command": ["python3", "-I", "setup/apps.py"],
+      "files": ["core/data/apps.json"],
+      "branch_prefix": "bot/formadaptor-"
+    },
+    {
+      "name": "formext",
+      "repository": "nodemode-dev/form.ext",
+      "enabled": false,
+      "command": ["python3", "-I", "setup/hosts.py"],
+      "files": ["HOSTS.md", "core/data/hosts.json"],
+      "branch_prefix": "bot/formadaptor-"
+    }
+  ]
+}
