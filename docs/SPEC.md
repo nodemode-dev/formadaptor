@@ -12,18 +12,28 @@ Published at `https://github.com/nodemode-dev/formadaptor/blob/spec/family.json`
 | `content_sha256` | SHA-256 of the document without `generated` and `content_sha256`, keys sorted, no whitespace. |
 | `apps` | Every enabled registry entry, sorted by `id`. |
 
-An app whose repository is private is `{"id": "<catalogue id>", "public": false}` and nothing else. A public app has:
+An app whose repository is private is `{"id": "<catalogue id>", "public": false}` and nothing else. A public app has the fields below. "Registry" is formcompiler's `apps/<registry name>.json` at `main`; every other source is named. formadaptor copies each value as it finds it and decides none of them.
 
-| Field | Meaning |
-| --- | --- |
-| `id` | The catalogue id (`formslide` for FormDeck, `formai` for FormPortal). |
-| `public` | `true`. |
-| `app`, `repo`, `repository`, `site` | Registry name, repository name, `nodemode-dev/<repo>`, path on formai.studio (spec/ids.json). |
-| `name`, `kind`, `summary`, `licence`, `state` | From the registry's `catalog`. |
-| `launcher` | The registry's `build.cli`, else the registry name. |
-| `agents` | `{"mcp": bool, "skills": "<skills folder or empty>"}` from the registry. |
-| `release` | The newest published, non-draft, stable, non-yanked release: `version`, `tag`, `published`, `url`, and `skills` (folder names from its `form-app.json`) when it has one. `null` when there is none. |
-| `manifest` | Counts from `agents/manifest.json` at that tag; left out when the file is missing or does not follow the schema. |
+| Field | Meaning | Comes from |
+| --- | --- | --- |
+| `id` | The catalogue id (`formslide` for FormDeck, `formai` for FormPortal). | Registry `catalog.id`. |
+| `public` | `true`. | GitHub: `GET /repos/nodemode-dev/<repo>` answers 200 with `"private": false`. |
+| `app` | Registry name. | Registry `app`. |
+| `repo` | Repository name. | formadaptor's `spec/ids.json` `repo` (checked against the registry's `repository` on every build). |
+| `repository` | `nodemode-dev/<repo>`. | Registry `repository`. |
+| `site` | Path on formai.studio. | formadaptor's `spec/ids.json` `site`. |
+| `name`, `kind`, `summary`, `licence` | Display name, kind, one-line summary, licence. | Registry `catalog.name`, `catalog.kind`, `catalog.summary`, `catalog.licence`. |
+| `state` | The registry's state for the app (`live`, `public`, `prelaunch` today). | Registry `catalog.state`, and nothing else: not GitHub, not the release, not formai.studio's catalogue. |
+| `launcher` | The command that starts the app. | Registry `build.cli`, else registry `app`. |
+| `agents` | `{"mcp": bool, "skills": "<skills folder or empty>"}`. | Registry `agents.mcp` and `agents.skills`. |
+| `release` | The newest published, non-draft, stable (`vX.Y.Z`), non-yanked release, or `null` when there is none. | GitHub: `GET /repos/nodemode-dev/<repo>/releases`, less the versions in formcompiler's `yanked.json`. |
+| `release.version`, `release.tag`, `release.published`, `release.url` | `X.Y.Z`, the tag, when it was published, its page. | The release's `tag_name`, `published_at` (else `created_at`) and `html_url`. |
+| `release.skills` | Skill folder names, sorted; left out when the release has no readable `form-app.json`. | The release asset `form-app.json`, `agents.skills.skills[].folder` (else `.name`), only when its `app` and `version` match. |
+| `manifest` | Counts (below); left out when the file is missing or does not follow the schema. | `agents/manifest.json` in the app's repository at `release.tag` (`GET /repos/nodemode-dev/<repo>/contents/agents/manifest.json?ref=<tag>`). |
+
+### What `state` is, and what else the spec carries
+
+`state` is the registry's `catalog.state`, copied. formai.studio's catalogue can call an app live that the registry still calls `public` or `prelaunch` (six apps on 2026-11-18: FormPortal and FormEncoder `public`; FormMCP, FormSkills, FormPDF and FormTray `prelaunch`). Which source is right is the owner's decision; until it is made, a generator that lists "live" apps follows the registry. A generator that needs another rule can already build it from the spec without a new field: whether the app has a published stable release is `release` not being `null`, and its version and publication time are `release.version` and `release.published`. What formai.studio's own catalogue says is not in the spec: formadaptor does not read it.
 
 ## The agent manifest
 

@@ -38,6 +38,17 @@ def test_public_apps_carry_ids_release_and_manifest_counts(compiler, routes):
     assert doc["content_sha256"] == spec.content_hash(doc)
 
 
+def test_state_is_the_registry_catalog_state_whatever_the_release_says(compiler, routes):
+    root, _ = compiler
+    path = root / "apps" / "formvis.json"
+    data = json.loads(path.read_text())
+    data["catalog"]["state"] = "prelaunch"
+    path.write_text(json.dumps(data))
+    vis = {a["id"]: a for a in built(compiler, routes)[0]["apps"]}["formvis"]
+    assert vis["state"] == "prelaunch"
+    assert vis["release"]["version"] == "2.3.5" and vis["release"]["published"] == "2026-11-17T12:00:00Z"
+
+
 def test_the_build_time_is_not_part_of_the_content_hash(compiler, routes):
     first, _ = built(compiler, routes, "2026-11-19T00:00:00Z")
     second, _ = built(compiler, routes, "2026-11-19T01:33:00Z")
