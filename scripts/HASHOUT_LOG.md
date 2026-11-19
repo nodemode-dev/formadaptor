@@ -19,3 +19,14 @@ Modelled on formcompiler's `scripts/github_api.py` (same headers, the same `ApiE
 The token is `GH_TOKEN` unless one is passed. The hourly workflow gives it the built-in token, which can read public repositories only, so the client never sees anything private.
 
 Run 2026-11-18 against a local server on 127.0.0.1:25100: `get` read a repository, `paged` followed one `rel="next"` link and returned both pages, a 404 raised `ApiError` with status 404, and `file_at` answered `None` for a missing file.
+
+### registry.py · the registry is read, never copied; ids.json is checked against it
+- refers-to: scripts/registry.py :: load, ids, id_problems; spec/ids.json
+- kind: feature
+- logged: v0.1.0 · 2026-11-18
+
+formcompiler stays the source of truth for which apps exist. `load` reads `apps/*.json` from a checkout (the workflows check out `nodemode-dev/formcompiler` at `main`) and asks only for the fields formadaptor uses: `app`, `repository`, `enabled` and the catalogue's `id`, `name`, `kind`, `summary`, `licence`, `state`. Full validation stays formcompiler's own `registry.py check`; this one refuses only what would make the spec wrong (a missing field, a file name that is not the app, a repository outside nodemode-dev).
+
+`spec/ids.json` is hand-written and committed so a reviewer sees the id pairs in one place. `ids --check` compares its `repo` and `catalog` with the registry and refuses an id used twice. `site` is not compared: today the site path is the catalogue id for every app, and the file is where they would part if the site ever moved an app. The registry version is formcompiler's `VERSION`, not its commit, so a registry commit that changes nothing formadaptor reads does not change the spec.
+
+Run 2026-11-18 on a copy of the formcompiler clone in /tmp/formadaptor-smoke: 31 entries, 30 enabled, `ids --check` in step (rc 0); with formdeck's catalogue id changed to `formdeck` in the copy it named that one problem (rc 1); a folder that is not a checkout stopped with a message (rc 1).
