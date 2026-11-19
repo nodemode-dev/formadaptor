@@ -1,0 +1,77 @@
+name: self-check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: self-check-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ACTIONLINT_VERSION: "1.7.12"
+  ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Test dependencies
+        run: python3 -m pip install --quiet --break-system-packages -r tests/requirements.txt
+      - name: The scripts
+        run: python3 -m pytest tests -q -p no:cacheprovider
+
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: nodemode-dev/formcompiler
+          ref: main
+          path: compiler
+          persist-credentials: false
+      - name: actionlint
+        run: |
+          url="https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl --proto '=https' --proto-redir '=https' -fsSL -o "$RUNNER_TEMP/actionlint.tar.gz" "$url"
+          echo "$ACTIONLINT_SHA256  $RUNNER_TEMP/actionlint.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" -color .github/workflows/*.yml
+      - name: Python compiles
+        run: python3 -m py_compile scripts/*.py
+      - name: The id pairs match formcompiler's registry
+        run: python3 -I scripts/registry.py ids --compiler compiler --check
+      - name: The targets file loads
+        run: python3 -I scripts/propose.py matrix
+      - name: No em dash in tracked markdown, no emoji in tracked text
+        run: |
+          python3 - <<'PY'
+          import subprocess, sys
+          bad = []
+          for path in subprocess.check_output(['git', 'ls-files'], text=True).split():
+              try:
+                  text = open(path, encoding='utf-8').read()
+              except (UnicodeDecodeError, IsADirectoryError, FileNotFoundError):
+                  continue
+              markdown = path.endswith('.md')
+              for ch in text:
+                  cp = ord(ch)
+                  if (markdown and cp == 0x2014) or 0x1F000 <= cp <= 0x1FAFF or 0x2600 <= cp <= 0x27BF:
+                      bad.append(f'{path}: U+{cp:04X}')
+                      break
+          print('\n'.join(bad) or 'clean')
+          sys.exit(1 if bad else 0)
+          PY
