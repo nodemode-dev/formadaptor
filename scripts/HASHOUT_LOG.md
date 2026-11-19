@@ -99,3 +99,32 @@ The push sends the token as an `http.<base>/.extraheader` for that one command, 
 formtray and form.ext are listed with `enabled: false`: neither has a generator yet. A disabled target is skipped with a notice. The owner turns each on once its generator has landed on the target's `main` (docs/OWNER_SETUP.md).
 
 Run 2026-11-18 on /tmp/formadaptor-target-formMCP (formMCP's committed `core/data/family.json` and a stand-in `setup/family.py` that follows the contract): `--dry-run` with the spec where FormFabric had just gone public printed branch `bot/formadaptor-4626ce56ed`, the one file `core/data/family.json` and the title `chore(family): FormFabric is public`. With an in-process fake GitHub and a bare repository at file:///tmp/formadaptor-remote, the real path pushed that branch (commit by nodemode-ai, the token absent from `.git/config`), opened pull request 9, commented on and closed the older bot pull request 7 and deleted its branch, and left the non-bot pull request 8 alone. After that branch was merged into the checkout's main, the run said "in step with the family spec, nothing to propose" and changed nothing. A stand-in that also wrote `stray.txt` was refused by name. `matrix` listed the three enabled targets; formtray said it is disabled.
+
+### hourly.yml · minute 33, build with a read-only token, publish in its own job
+- refers-to: .github/workflows/hourly.yml :: spec, publish, propose
+- kind: feature
+- logged: v0.1.0 · 2026-11-18
+
+Minute 33 because formcompiler's workflows start at 0, 15, 30, 45 and 17 and formpipe's at 47. This hourly run is the "has an app just gone public" check: the visibility call is what notices.
+
+The rules are formcompiler's: every action pinned to a full commit SHA with its version as a trailing comment (the same pins formcompiler uses, since no other could be looked up here), no `${{ }}` inside `run:`, `contents: read` at the top and widened only for `publish`, and `persist-credentials: false` on every checkout. The fork guard `github.repository == 'nodemode-dev/formadaptor'` is on every job, with `github.ref == 'refs/heads/main'`, so a fork's copy of the schedule does nothing and a dispatch from another branch publishes nothing. In formcompiler that reason sits in a YAML comment above each guard; here it lives only in this log.
+
+`spec` builds with the built-in token, which reads public repositories only, and hands `family.json` to `publish` as an artifact only when `content_sha256` differs from the published file's. `publish` is the one job with `contents: write`, and writes only the `spec` branch. `propose` calls propose.yml after a publish, passing the two App secrets by name rather than `secrets: inherit`. A failed proposal is retried by dispatching propose.yml by hand; the next hourly run proposes only when the spec changes again.
+
+### propose.yml · one job per target, one token per target
+- refers-to: .github/workflows/propose.yml :: targets, propose
+- kind: feature
+- logged: v0.1.0 · 2026-11-18
+
+`targets` lists the enabled targets from targets.json; `propose` runs once per target with `fail-fast: false`, so one broken target does not hold back the others. The App token is minted with formcompiler's pinned `actions/create-github-app-token` (v3.3.0) the same way formcompiler's release job does it (`client-id` from the `_APP_ID` secret, `owner: nodemode-dev`), but for `repositories: <that one target>` with `permission-contents: write` and `permission-pull-requests: write` only. The target is checked out at `main` with that token and `persist-credentials: false`; the token reaches only propose.py, through `FORMADAPTOR_TARGET_TOKEN`, and propose.py keeps it out of the generator's environment.
+
+A dispatch may name one target; every step of the other matrix rows is skipped. `workflow_call` declares the same `target` input so `inputs.target` is defined on both paths.
+
+### self-check.yml · formcompiler's self-check, for this tree
+- refers-to: .github/workflows/self-check.yml :: test, lint
+- kind: feature
+- logged: v0.1.0 · 2026-11-18
+
+The same jobs as formcompiler's self-check: pytest, actionlint 1.7.12 checked against formcompiler's recorded SHA-256 of the release archive, `py_compile`, and the no-em-dash-in-Markdown, no-emoji scan, unchanged. Two checks are this repository's own: `registry.py ids --check` against a checkout of formcompiler's `main`, so a registry change that breaks an id pair is seen on the next push or pull request here, and `propose.py matrix`, which loads and validates targets.json.
+
+Run 2026-11-18: actionlint v1.7.12 built with `go install` (behind /tmp/form-heavy-A.lock) passed hourly.yml, propose.yml and self-check.yml with no finding.
