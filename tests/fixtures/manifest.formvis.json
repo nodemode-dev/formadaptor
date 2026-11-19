@@ -1,0 +1,16 @@
+{
+  "format": "form-agent-manifest",
+  "version": 1,
+  "app": "formvis",
+  "mcp": {
+    "tools": ["open_image", "list_layers", "apply_filter", "export_image"],
+    "read_only": ["list_layers"],
+    "approval_gated": ["export_image"],
+    "transports": ["stdio", "http"]
+  },
+  "skills": [
+    {"name": "formvis-harness", "sub_skills": ["layers", "filters", "export"]}
+  ],
+  "dock": {"present": true, "positions": ["right", "bottom"], "tabs": ["chat", "activity"]},
+  "extensions": {"host_api": "1"}
+}

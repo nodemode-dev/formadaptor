@@ -99,7 +99,9 @@ def load(path):
 
 
 def changes(old, new):
-    before = {a["id"]: a for a in (old or {}).get("apps", [])}
+    if not old:
+        return []
+    before = {a["id"]: a for a in old.get("apps", [])}
     after = {a["id"]: a for a in new.get("apps", [])}
     found = []
     for app_id, app in after.items():
