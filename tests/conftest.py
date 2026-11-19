@@ -67,6 +67,7 @@ MINI = [
     entry("formvis", "formvis", "formvis", "FormVis"),
     entry("formdeck", "formdeck", "formslide", "FormDeck"),
     entry("formsecret", "formSecret", "formsecret", "FormSecret"),
+    entry("formCAD", "formCAD", "formcad", "FormCAD"),
     entry("formlater", "formlater", "formlater", "FormLater", enabled=False),
 ]
 
@@ -91,6 +92,7 @@ def routes():
     return {
         "/repos/nodemode-dev/formvis": [200, {"private": False}],
         "/repos/nodemode-dev/formdeck": [200, {"private": False}],
+        "/repos/nodemode-dev/formCAD": [404, {"message": "Not Found"}],
         "/repos/nodemode-dev/formvis/releases": [200, [
             {"tag_name": "v2.4.0", "draft": True},
             {"tag_name": "v2.4.0-beta.1", "prerelease": True, "published_at": "2026-11-18T00:00:00Z"},

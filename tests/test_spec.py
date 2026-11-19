@@ -19,10 +19,12 @@ def built(compiler, routes, generated="2026-11-19T00:00:00Z"):
 def test_private_apps_are_a_bare_id_and_nothing_about_them_is_read(compiler, routes):
     doc, fake = built(compiler, routes)
     by_id = {a["id"]: a for a in doc["apps"]}
-    assert [a["id"] for a in doc["apps"]] == ["formsecret", "formslide", "formvis"]
+    assert [a["id"] for a in doc["apps"]] == ["formcad", "formsecret", "formslide", "formvis"]
     assert by_id["formsecret"] == {"id": "formsecret", "public": False}
-    assert "FormSecret" not in json.dumps(doc)
+    assert by_id["formcad"] == {"id": "formcad", "public": False}
+    assert "FormSecret" not in json.dumps(doc) and "formCAD" not in json.dumps(doc) and "FormCAD" not in json.dumps(doc)
     assert [path for _, path, _ in fake.calls if "formSecret" in path] == ["/repos/nodemode-dev/formSecret"]
+    assert [path for _, path, _ in fake.calls if "formCAD" in path] == ["/repos/nodemode-dev/formCAD"]
 
 
 def test_public_apps_carry_ids_release_and_manifest_counts(compiler, routes):

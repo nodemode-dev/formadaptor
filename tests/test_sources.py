@@ -14,11 +14,12 @@ import visibility
 def test_ids_file_pairs_every_registry_entry_once():
     rows = json.loads((REPO / "spec" / "ids.json").read_text(encoding="utf-8"))["apps"]
     by_app = {r["app"]: r for r in rows}
-    assert len(rows) == len(by_app) == 31
+    assert len(rows) == len(by_app) == 32
     assert by_app["formdeck"]["catalog"] == by_app["formdeck"]["site"] == "formslide"
     assert by_app["formportal"]["catalog"] == "formai"
     assert by_app["formrec"]["repo"] == "formREC"
-    assert len({r["catalog"] for r in rows}) == 31
+    assert by_app["formCAD"] == {"app": "formCAD", "repo": "formCAD", "catalog": "formcad", "site": "formcad"}
+    assert len({r["catalog"] for r in rows}) == 32
 
 
 def test_id_check_names_a_changed_catalogue_id(compiler):

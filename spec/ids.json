@@ -4,6 +4,7 @@
   "apps": [
     {"app": "form.ext", "repo": "form.ext", "catalog": "formext", "site": "formext"},
     {"app": "form.md", "repo": "form.md", "catalog": "formmd", "site": "formmd"},
+    {"app": "formCAD", "repo": "formCAD", "catalog": "formcad", "site": "formcad"},
     {"app": "formDAM", "repo": "formDAM", "catalog": "formdam", "site": "formdam"},
     {"app": "formMCP", "repo": "formMCP", "catalog": "formmcp", "site": "formmcp"},
     {"app": "formNET", "repo": "formNET", "catalog": "formnet", "site": "formnet"},

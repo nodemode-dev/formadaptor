@@ -3,7 +3,7 @@
 Living log of all comment content, explainers, rationale, TODOs and removed code for the adaptor (the scripts and the workflows). The source files stay comment-free per dev-rules `sub-skills/hashout-log/SUB-SKILL.md`; everything they would have said lives here, indexed. Read this first, then edit code surgically.
 
 Current build version: v0.1.0
-Last updated: 2026-11-19 · form.ext on and profile off in targets.json, mcp.dispatch in the agent manifest (v0.1.0)
+Last updated: 2026-11-19 · the 32nd id row, formCAD, private (v0.1.0)
 
 ### github_api.py · one client, one transport, nothing global
 - refers-to: scripts/github_api.py :: GitHub, urllib_transport, file_at, asset
@@ -30,6 +30,15 @@ formcompiler stays the source of truth for which apps exist. `load` reads `apps/
 `spec/ids.json` is hand-written and committed so a reviewer sees the id pairs in one place. `ids --check` compares its `repo` and `catalog` with the registry and refuses an id used twice. `site` is not compared: today the site path is the catalogue id for every app, and the file is where they would part if the site ever moved an app. The registry version is formcompiler's `VERSION`, not its commit, so a registry commit that changes nothing formadaptor reads does not change the spec.
 
 Run 2026-11-18 on a copy of the formcompiler clone in /tmp/formadaptor-smoke: 31 entries, 30 enabled, `ids --check` in step (rc 0); with formdeck's catalogue id changed to `formdeck` in the copy it named that one problem (rc 1); a folder that is not a checkout stopped with a message (rc 1).
+
+### ids.json · the 32nd row, formCAD, a private repository
+- refers-to: spec/ids.json; tests/conftest.py :: MINI, routes
+- kind: feature
+- logged: v0.1.0 · 2026-11-19
+
+formcompiler 0.16.1 registered a 32nd entry, `apps/formCAD.json`: enabled, its repository private. Its row here is the id pair and nothing else (catalogue and site id `formcad`). While the repository is private the spec carries `{"id": "formcad", "public": false}`; nothing else about it is read or written, and `spec.changes` names nothing for a private app that joins, so the run summary and a pull request title say only `registry 0.16.1`. The test fixtures gained the same thing: a registry entry with stand-in catalogue values and a 404 for its repository.
+
+Run 2026-11-19: before the row, `registry.py ids --compiler <clone> --check` printed "formCAD: in the registry, not in spec/ids.json" (rc 1); with it, "32 registry entries, in step" (rc 0). `spec.py build` against a local fake of GitHub that replays the sample spec and answers 404 for formCAD (one visibility call for it and no other): 31 apps, 23 public, 8 private; against the earlier sample the only differences are the bare entry and `registry_version` 0.16.0 to 0.16.1, and with them the hash and the build time. The three enabled targets' generators, in temp copies, given a spec with the new private id alone: each in step, nothing written. The registry version alone moves one line in each target's output (each prints it), so the first run after 0.16.1 proposes that line and the spec copy to each target.
 
 ### visibility.py · 200 with private false is public; every other answer is private, except no answer
 - refers-to: scripts/visibility.py :: public, STOP
