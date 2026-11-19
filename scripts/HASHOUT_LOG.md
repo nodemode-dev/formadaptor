@@ -3,7 +3,7 @@
 Living log of all comment content, explainers, rationale, TODOs and removed code for the adaptor (the scripts and the workflows). The source files stay comment-free per dev-rules `sub-skills/hashout-log/SUB-SKILL.md`; everything they would have said lives here, indexed. Read this first, then edit code surgically.
 
 Current build version: v0.1.0
-Last updated: 2026-11-18 · the first build: ids, the GitHub helper, registry, visibility, releases, the agent manifest, the family spec, targets and the propose step, three workflows (v0.1.0)
+Last updated: 2026-11-18 · the kept copy of the spec, formtray no longer a target, the advisory check against main (v0.1.0)
 
 ### github_api.py · one client, one transport, nothing global
 - refers-to: scripts/github_api.py :: GitHub, urllib_transport, file_at, asset

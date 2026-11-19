@@ -13,6 +13,10 @@ Tests live in `tests/`; `python3 -m pytest tests -q -p no:cacheprovider` runs th
 - Least permissions at the top of each workflow, widened per job; every job that publishes or proposes is guarded by `github.repository == 'nodemode-dev/formadaptor'` and `main`.
 - Nothing from a private repository appears in any output: a private app is an id with `public: false`.
 - formadaptor never pushes to `main` anywhere and never writes a target's file itself.
+- Every target declares its kept copy of the spec as `spec_copy`, also listed in its `files`; a proposal is only ever output and copy together, never the copy alone.
+- formadaptor copies each field of the spec from its source and decides none of them: `state` is the registry's `catalog.state`. Which apps count as live is the owner's decision.
+- formtray is not a target (its app list is the owner's dated release schedule, kept by hand); do not add it back.
+- The advisory check (`scripts/advisory.py`) only reports: it never fails the hourly run and never proposes.
 - After changing `spec/ids.json`, run `python3 -I scripts/registry.py ids --compiler <formcompiler checkout> --check`; after a workflow change, run actionlint.
 
 ## Commits
