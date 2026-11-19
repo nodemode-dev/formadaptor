@@ -89,6 +89,70 @@ def test_a_spec_change_that_leaves_the_output_alone_proposes_nothing(tmp_path, t
     assert git(target, "status", "--porcelain") == ""
 
 
+RECORDS_THE_REGISTRY = STANDIN.replace('json.dumps({"apps"', 'json.dumps({"version": family["source"]["registry_version"], "apps"')
+
+
+def family_from_registry(tmp_path, ids, registry, generated, name):
+    path = family(tmp_path, ids, name)
+    doc = json.loads(path.read_text())
+    doc["source"]["registry_version"] = registry
+    doc["generated"] = generated
+    doc["content_sha256"] = spec.content_hash(doc)
+    path.write_text(spec.text_of(doc))
+    return path
+
+
+def generated_and_committed(target, path):
+    propose.plan(TARGET, target, path)
+    git(target, "add", "-A")
+    git(target, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "generated")
+
+
+def test_specs_that_differ_only_in_registry_version_time_and_hash_propose_nothing(tmp_path, target):
+    one = family_from_registry(tmp_path, ["formvis"], "0.16.0", "2026-11-19T00:00:00Z", "one.json")
+    two = family_from_registry(tmp_path, ["formvis"], "0.16.1", "2026-11-19T07:00:00Z", "two.json")
+    before, after = json.loads(one.read_text()), json.loads(two.read_text())
+    assert sorted(k for k in before if before[k] != after[k]) == ["content_sha256", "generated", "source"]
+    assert before["source"]["repository"] == after["source"]["repository"]
+    generated_and_committed(target, one)
+    kept = (target / "setup" / "family.spec.json").read_bytes()
+    assert propose.plan(TARGET, target, two, one) is None
+    assert git(target, "status", "--porcelain") == ""
+    assert (target / "setup" / "family.spec.json").read_bytes() == kept == one.read_bytes()
+
+
+def test_an_output_that_records_the_registry_version_is_warned_about_and_still_proposed(tmp_path, target):
+    assert RECORDS_THE_REGISTRY != STANDIN
+    (target / "setup" / "apps.py").write_text(RECORDS_THE_REGISTRY)
+    git(target, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qam", "records the registry version")
+    one = family_from_registry(tmp_path, ["formvis"], "0.16.0", "2026-11-19T00:00:00Z", "one.json")
+    generated_and_committed(target, one)
+    plan = propose.plan(TARGET, target, family_from_registry(tmp_path, ["formvis"], "0.16.1", "2026-11-19T07:00:00Z", "two.json"), one)
+    assert plan["files"] == ["core/data/apps.json", "setup/family.spec.json"]
+    assert plan["warning"].startswith("formx: core/data/apps.json differs although")
+    assert "its generator is recording something that is not app data" in plan["warning"]
+    git(target, "checkout", "-q", "--", ".")
+    joined = propose.plan(TARGET, target, family_from_registry(tmp_path, ["formvis", "formnew"], "0.16.1", "2026-11-19T07:00:00Z", "three.json"), one)
+    assert joined["files"] == plan["files"] and joined["warning"] is None
+
+
+def test_the_warning_reaches_the_run_summary_and_the_run_does_not_fail(tmp_path, target):
+    (target / "setup" / "apps.py").write_text(RECORDS_THE_REGISTRY)
+    git(target, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qam", "records the registry version")
+    one = family_from_registry(tmp_path, ["formvis"], "0.16.0", "2026-11-19T00:00:00Z", "one.json")
+    generated_and_committed(target, one)
+    two = family_from_registry(tmp_path, ["formvis"], "0.16.1", "2026-11-19T07:00:00Z", "two.json")
+    (tmp_path / "t.json").write_text(json.dumps({"format": "formadaptor-targets", "format_version": 1, "targets": [TARGET]}))
+    shown, out = tmp_path / "summary.md", tmp_path / "output"
+    result = script("propose.py", "run", "--target", "formx", "--checkout", str(target), "--family", str(two), "--dry-run", "--targets", str(tmp_path / "t.json"),
+                    env={"PATH": "/usr/bin:/bin", "GITHUB_STEP_SUMMARY": str(shown), "GITHUB_OUTPUT": str(out)})
+    assert result.returncode == 0
+    assert shown.read_text().startswith("Warning: formx: core/data/apps.json differs although")
+    assert "is recording something that is not app data (docs/TARGETS.md). The proposal is not held back.\n" in shown.read_text()
+    assert "::warning::formx: core/data/apps.json differs" in result.stdout
+    assert '"branch": "bot/formadaptor-' in result.stdout
+
+
 def test_a_generator_that_changes_only_its_copy_proposes_nothing(tmp_path, target, capsys):
     (target / "setup" / "apps.py").write_text("import shutil, sys\nif '--check' in sys.argv: sys.exit(1)\n"
                                               "shutil.copyfile(sys.argv[sys.argv.index('--family') + 1], 'setup/family.spec.json')\n")

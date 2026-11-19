@@ -8,7 +8,7 @@ Published at `https://github.com/nodemode-dev/formadaptor/blob/spec/family.json`
 | --- | --- |
 | `format`, `format_version` | `formai-family`, `1`. |
 | `generated` | When it was built. Not part of the content; never copy it. |
-| `source` | `{"repository": "nodemode-dev/formcompiler", "registry_version": "<formcompiler VERSION>"}`. |
+| `source` | `{"repository": "nodemode-dev/formcompiler", "registry_version": "<formcompiler VERSION>"}`. A consumer must not copy `registry_version` into a file it generates: the version moves with every compiler release, also one that changes nothing the consumer shows, and each copy would then drift for no visible reason. |
 | `content_sha256` | SHA-256 of the document without `generated` and `content_sha256`, keys sorted, no whitespace. |
 | `apps` | Every enabled registry entry, sorted by `id`. |
 

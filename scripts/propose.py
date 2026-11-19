@@ -137,6 +137,20 @@ def body_of(target, family_doc, previous_doc, paths):
     return "\n".join(lines) + "\n"
 
 
+def public_apps(doc):
+    apps = doc.get("apps") if isinstance(doc, dict) else None
+    if not isinstance(apps, list):
+        return None
+    return [a for a in apps if isinstance(a, dict) and a.get("public") is True]
+
+
+def kept_spec(checkout, target):
+    try:
+        return spec.load(Path(checkout) / target["spec_copy"])
+    except (OSError, ValueError):
+        return None
+
+
 def plan(target, checkout, family, previous=None):
     if git(checkout, "status", "--porcelain").strip():
         raise ProposeError(f"{target['name']}: the checkout is not clean before the generator runs")
@@ -148,6 +162,7 @@ def plan(target, checkout, family, previous=None):
         return None
     if code != 1:
         raise ProposeError(f"{target['name']}: the generator's --check exited {code}, not 0 or 1")
+    shown_before = public_apps(kept_spec(checkout, target))
     code = run_generator(target, checkout, family, check=False)
     if code != 0:
         raise ProposeError(f"{target['name']}: the generator exited {code}")
@@ -166,7 +181,12 @@ def plan(target, checkout, family, previous=None):
         raise ProposeError(f"{target['name']}: the generator changed {', '.join(p for p in paths if p != copy)} but did not leave {copy} a copy of the spec it was given")
     digest = change_hash(checkout, paths)
     previous_doc = spec.load(previous)
+    warning = None
+    if shown_before is not None and shown_before == public_apps(family_doc):
+        warning = (f"{target['name']}: {', '.join(p for p in paths if p != copy)} differs although this spec and the one it was generated from hold the same public app data; "
+                   "its generator is recording something that is not app data (docs/TARGETS.md)")
     return {
+        "warning": warning,
         "target": target["name"],
         "repository": target["repository"],
         "branch": f"{target['branch_prefix']}{digest[:10]}",
@@ -241,6 +261,9 @@ def main():
             summary(f"{target['name']}: in step with the family spec, nothing to propose\n")
             output("proposed", "false")
             return 0
+        if proposal["warning"]:
+            print(f"::warning::{proposal['warning']}")
+            summary(f"Warning: {proposal['warning']}. The proposal is not held back.\n")
         if args.dry_run:
             print(json.dumps({k: v for k, v in proposal.items() if k != "body"}, indent=2))
             print(proposal["body"])
