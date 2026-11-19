@@ -54,3 +54,16 @@ formcompiler's `releases.json` was not used as the source: it is the signed cata
 `form_app_skills` reads the release's `form-app.json` asset (format_version 2, formcompiler `docs/REGISTRY.md`, `agents`) and keeps the skill folder names. An asset that cannot be read, or names another app or version, is left out with a warning rather than stopping the family.
 
 Run 2026-11-18 against the fake server: formvis gave 2.3.5 with its skill list, past a newer draft and a newer beta; formtray gave 0.16.2 with no skills (it has no skills folder); formfabric (404) gave `None`; with formvis 2.3.5 marked yanked it fell back to the older 0.1.0. The yanked set read from the formcompiler clone holds formfabric 0.25.1, formsculpt 1.21.0 and formsurface 0.62.1.
+
+### manifest.py · counts from agents/manifest.json, or no counts at all
+- refers-to: scripts/manifest.py :: problems_of, counts, read; spec/agent-manifest.schema.json; docs/SPEC.md :: The agent manifest
+- kind: feature
+- logged: v0.1.0 · 2026-11-18
+
+No app ships `agents/manifest.json` yet. The spec builder reads it at the release tag and, when it is missing (404), leaves the app's `manifest` block out instead of guessing counts from `form-app.json` or the registry. The owner's wording: counts are then left out rather than guessed.
+
+The lists in the manifest are names, not numbers (`mcp.tools`, `mcp.read_only`, `mcp.approval_gated`, `dock.tabs`, each skill's `sub_skills`), so an app's own `--check` can compare them with its code and a reader can see which tool is gated; the spec carries the counts. `read_only` and `approval_gated` must be subsets of `tools`.
+
+`problems_of` is a hand-written check of the same rules as `spec/agent-manifest.schema.json`, because the scripts use the standard library only (no jsonschema). The two must change together. `manifest.py check FILE --app NAME` is there for an app's own sync step to call. A manifest that breaks a rule, is not JSON, or answers a 4xx other than 404 gives a warning and no counts; a 5xx or no answer stops the build, as visibility does.
+
+Run 2026-11-18: a sample formvis manifest passed `check` (rc 0) and `counts` gave 4 tools, 1 read-only, 1 gated, 1 skill with 3 sub-skills, a dock on two sides with 2 tabs, host API 1; a broken copy named four problems (unknown field, wrong app, a read-only tool not in tools, an unknown dock position) and exited 1. Against the fake server, formvis's manifest at v2.3.5 gave the counts, formcut's broken one a warning and `None`, formtray's missing one `None` with no warning.
