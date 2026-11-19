@@ -48,6 +48,8 @@ def load_targets(path=TARGETS):
         files = target.get("files")
         if not isinstance(files, list) or not files or not all(isinstance(f, str) and FILE.match(f) and ".." not in f.split("/") for f in files):
             problems.append("files must list plain paths in the target repository")
+        elif not isinstance(target.get("spec_copy"), str) or target["spec_copy"] not in files:
+            problems.append("spec_copy must name the target's copy of the spec, one of its files")
         if not PREFIX.match(target.get("branch_prefix", "")):
             problems.append("branch_prefix must look like bot/<name>-")
         if problems:
@@ -121,7 +123,7 @@ def body_of(target, family_doc, previous_doc, paths):
     lines = [
         f"The family spec changed and `{' '.join(target['command'])}` in this repository, run with `--family family.json`, writes:",
         "",
-        *[f"- `{p}`" for p in paths],
+        *[f"- `{p}`" + (" (the copy of the spec it was generated from)" if p == target.get("spec_copy") else "") for p in paths],
         "",
     ]
     found = spec.changes(previous_doc, family_doc) if previous_doc else []
@@ -155,6 +157,13 @@ def plan(target, checkout, family, previous=None):
     outside = [p for p in paths if not allowed(p, target["files"])]
     if outside:
         raise ProposeError(f"{target['name']}: the generator changed files outside its declared list: {', '.join(outside)}")
+    copy = target["spec_copy"]
+    if paths == [copy]:
+        print(f"::warning::{target['name']}: --check reported a difference but the generator changed only {copy}; nothing a person can see changed, so nothing is proposed")
+        return None
+    kept = Path(checkout) / copy
+    if not kept.is_file() or kept.read_bytes() != Path(family).read_bytes():
+        raise ProposeError(f"{target['name']}: the generator changed {', '.join(p for p in paths if p != copy)} but did not leave {copy} a copy of the spec it was given")
     digest = change_hash(checkout, paths)
     previous_doc = spec.load(previous)
     return {

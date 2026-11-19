@@ -8,20 +8,31 @@ from conftest import client, script
 import propose
 import spec
 
-STANDIN = """import argparse, json, sys
+STANDIN = """import argparse, json, shutil, sys
 from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "core" / "data" / "apps.json"
+KEPT = Path(__file__).resolve().parent / "family.spec.json"
 p = argparse.ArgumentParser(); p.add_argument("--family", required=True); p.add_argument("--check", action="store_true"); a = p.parse_args()
 family = json.loads(Path(a.family).read_text())
 text = json.dumps({"apps": [x["id"] for x in family["apps"] if x["public"]]}, indent=2) + "\\n"
 current = OUT.read_text() if OUT.is_file() else ""
 if a.check:
     print("in step" if current == text else "drifted: core/data/apps.json"); sys.exit(0 if current == text else 1)
-OUT.parent.mkdir(parents=True, exist_ok=True); OUT.write_text(text)
+if current != text:
+    OUT.parent.mkdir(parents=True, exist_ok=True); OUT.write_text(text); shutil.copyfile(a.family, KEPT)
 """
 
 TARGET = {"name": "formx", "repository": "nodemode-dev/formX", "enabled": True, "command": ["python3", "-I", "setup/apps.py"],
-          "files": ["core/data/apps.json"], "branch_prefix": "bot/formadaptor-"}
+          "files": ["core/data/apps.json", "setup/family.spec.json"], "spec_copy": "setup/family.spec.json", "branch_prefix": "bot/formadaptor-"}
+
+
+def family_with_version(tmp_path, version, name):
+    path = family(tmp_path, ["formvis"], name)
+    doc = json.loads(path.read_text())
+    doc["apps"][0]["release"] = {"version": version}
+    doc["content_sha256"] = spec.content_hash(doc)
+    path.write_text(spec.text_of(doc))
+    return path
 
 
 def git(path, *args):
@@ -53,7 +64,9 @@ def test_a_difference_is_planned_with_branch_files_and_title(tmp_path, target):
     before = family(tmp_path, ["formvis"], "before.json")
     after = family(tmp_path, ["formvis", "formnew"])
     plan = propose.plan(TARGET, target, after, before)
-    assert plan["files"] == ["core/data/apps.json"]
+    assert plan["files"] == ["core/data/apps.json", "setup/family.spec.json"]
+    assert (target / "setup" / "family.spec.json").read_bytes() == after.read_bytes()
+    assert "- `setup/family.spec.json` (the copy of the spec it was generated from)" in plan["body"]
     assert plan["branch"] == f"bot/formadaptor-{propose.change_hash(target, plan['files'])[:10]}"
     assert plan["title"] == "chore(family): Formnew joins the family"
     assert "formhidden" not in (target / "core" / "data" / "apps.json").read_text()
@@ -66,6 +79,36 @@ def test_nothing_is_proposed_when_the_target_is_in_step(tmp_path, target):
     git(target, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "generated")
     assert propose.plan(TARGET, target, path) is None
     assert git(target, "status", "--porcelain") == ""
+
+
+def test_a_spec_change_that_leaves_the_output_alone_proposes_nothing(tmp_path, target):
+    propose.plan(TARGET, target, family_with_version(tmp_path, "1.0.0", "one.json"))
+    git(target, "add", "-A")
+    git(target, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "generated")
+    assert propose.plan(TARGET, target, family_with_version(tmp_path, "1.0.1", "two.json")) is None
+    assert git(target, "status", "--porcelain") == ""
+
+
+def test_a_generator_that_changes_only_its_copy_proposes_nothing(tmp_path, target, capsys):
+    (target / "setup" / "apps.py").write_text("import shutil, sys\nif '--check' in sys.argv: sys.exit(1)\n"
+                                              "shutil.copyfile(sys.argv[sys.argv.index('--family') + 1], 'setup/family.spec.json')\n")
+    git(target, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qam", "copy only")
+    assert propose.plan(TARGET, target, family(tmp_path, ["formvis"])) is None
+    assert "changed only setup/family.spec.json" in capsys.readouterr().out
+
+
+def test_a_generator_that_does_not_refresh_its_copy_is_refused(tmp_path, target):
+    (target / "setup" / "apps.py").write_text(STANDIN.replace("; shutil.copyfile(a.family, KEPT)", ""))
+    git(target, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qam", "no copy")
+    with pytest.raises(propose.ProposeError, match="did not leave setup/family.spec.json a copy of the spec"):
+        propose.plan(TARGET, target, family(tmp_path, ["formvis"]))
+
+
+def test_a_target_without_its_spec_copy_among_its_files_is_refused(tmp_path):
+    bad = dict(TARGET, files=["core/data/apps.json"])
+    (tmp_path / "t.json").write_text(json.dumps({"format": "formadaptor-targets", "format_version": 1, "targets": [bad]}))
+    with pytest.raises(propose.ProposeError, match="spec_copy must name"):
+        propose.load_targets(tmp_path / "t.json")
 
 
 def test_a_file_outside_the_declared_list_is_refused(tmp_path, target):

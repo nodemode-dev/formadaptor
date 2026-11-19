@@ -7,7 +7,8 @@
       "repository": "nodemode-dev/formMCP",
       "enabled": true,
       "command": ["python3", "-I", "setup/family.py"],
-      "files": ["core/data/family.json"],
+      "files": ["core/data/family.json", "setup/family.spec.json"],
+      "spec_copy": "setup/family.spec.json",
       "branch_prefix": "bot/formadaptor-"
     },
     {
@@ -15,7 +16,8 @@
       "repository": "nodemode-dev/formskills",
       "enabled": true,
       "command": ["python3", "-I", "setup/apps.py"],
-      "files": ["core/data/apps.json"],
+      "files": ["core/data/apps.json", "setup/family.spec.json"],
+      "spec_copy": "setup/family.spec.json",
       "branch_prefix": "bot/formadaptor-"
     },
     {
@@ -23,15 +25,8 @@
       "repository": "nodemode-dev/.github",
       "enabled": true,
       "command": ["python3", "-I", "scripts/apps_table.py"],
-      "files": ["profile/README.md"],
-      "branch_prefix": "bot/formadaptor-"
-    },
-    {
-      "name": "formtray",
-      "repository": "nodemode-dev/formtray",
-      "enabled": false,
-      "command": ["python3", "-I", "setup/apps.py"],
-      "files": ["core/data/apps.json"],
+      "files": ["profile/README.md", "scripts/family.spec.json"],
+      "spec_copy": "scripts/family.spec.json",
       "branch_prefix": "bot/formadaptor-"
     },
     {
@@ -39,7 +34,8 @@
       "repository": "nodemode-dev/form.ext",
       "enabled": false,
       "command": ["python3", "-I", "setup/hosts.py"],
-      "files": ["HOSTS.md", "core/data/hosts.json"],
+      "files": ["HOSTS.md", "core/data/hosts.json", "setup/family.spec.json"],
+      "spec_copy": "setup/family.spec.json",
       "branch_prefix": "bot/formadaptor-"
     }
   ]
