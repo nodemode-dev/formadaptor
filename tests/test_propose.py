@@ -166,7 +166,25 @@ def test_an_open_pull_request_for_the_same_change_stops_a_second_push(tmp_path, 
 def test_the_targets_file_loads_and_lists_the_enabled_ones():
     result = script("propose.py", "matrix")
     assert result.returncode == 0
-    assert [t["name"] for t in json.loads(result.stdout)] == ["formmcp", "formskills", "profile"]
+    assert [t["name"] for t in json.loads(result.stdout)] == ["formmcp", "formskills", "formext"]
+
+
+def test_a_disabled_target_is_a_skip_not_a_failure(tmp_path):
+    named = {t["name"]: t for t in propose.load_targets()}
+    assert named["profile"]["enabled"] is False
+    out = tmp_path / "output"
+    result = script("propose.py", "run", "--target", "profile", "--checkout", str(tmp_path / "no-checkout"), "--family", str(tmp_path / "no-family.json"),
+                    env={"PATH": "/usr/bin:/bin", "GITHUB_OUTPUT": str(out)})
+    assert result.returncode == 0
+    assert "disabled in targets.json, nothing to do" in result.stdout
+    assert out.read_text() == "proposed=false\n"
+
+
+def test_form_ext_names_the_files_its_generator_writes():
+    target = {t["name"]: t for t in propose.load_targets()}["formext"]
+    assert target["enabled"] is True
+    assert target["files"] == [".claude/skills/HOSTS.md", "setup/hosts.json", "setup/family.spec.json"]
+    assert target["spec_copy"] == "setup/family.spec.json"
 
 
 def test_a_bad_target_entry_is_refused(tmp_path):

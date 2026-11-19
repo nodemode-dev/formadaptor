@@ -23,7 +23,7 @@
     {
       "name": "profile",
       "repository": "nodemode-dev/.github",
-      "enabled": true,
+      "enabled": false,
       "command": ["python3", "-I", "scripts/apps_table.py"],
       "files": ["profile/README.md", "scripts/family.spec.json"],
       "spec_copy": "scripts/family.spec.json",
@@ -32,9 +32,9 @@
     {
       "name": "formext",
       "repository": "nodemode-dev/form.ext",
-      "enabled": false,
+      "enabled": true,
       "command": ["python3", "-I", "setup/hosts.py"],
-      "files": ["HOSTS.md", "core/data/hosts.json", "setup/family.spec.json"],
+      "files": [".claude/skills/HOSTS.md", "setup/hosts.json", "setup/family.spec.json"],
       "spec_copy": "setup/family.spec.json",
       "branch_prefix": "bot/formadaptor-"
     }
