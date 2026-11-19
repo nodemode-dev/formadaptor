@@ -124,6 +124,17 @@ The rules are formcompiler's: every action pinned to a full commit SHA with its 
 
 `spec` builds with the built-in token, which reads public repositories only, and hands `family.json` to `publish` as an artifact only when `content_sha256` differs from the published file's. `publish` is the one job with `contents: write`, and writes only the `spec` branch. `propose` calls propose.yml after a publish, passing the two App secrets by name rather than `secrets: inherit`. A failed proposal is retried by dispatching propose.yml by hand; the next hourly run proposes only when the spec changes again.
 
+### advisory.py, hourly.yml · main against the released tag, reported and never acted on
+- refers-to: scripts/advisory.py :: check, compare_manifests, compare_skills, skill_folders, manifest_differences; .github/workflows/hourly.yml :: spec, step "Main against the released tags (advisory)"
+- kind: feature
+- logged: v0.1.0 · 2026-11-18
+
+The design follows released tags, with an advisory check against `main`. For each public app in the spec just built that has a release, it compares `agents/manifest.json` at `release.tag` with the same file on `main`, and the source of the one field the spec takes from `form-app.json`: the skill folders (folders with a `SKILL.md` directly inside the registry's `agents.skills` folder, which is what formcompiler's `agents.py collect` puts into `form-app.json`). It names what `main` adds or drops (tools, read-only and approval-gated tools, transports, skills and sub-skills, dock positions and tabs, the dock itself, the MCP server, extensions, the file itself, a file that no longer parses) in the workflow summary.
+
+It reads the spec it is given, so it makes no release calls of its own: two contents calls and, for apps with a skills folder, two recursive tree calls per app (under 100 an hour with the built-in token, beside the build's own). A tree GitHub truncates is said to be too large rather than read in part. One app that cannot be compared is said so and the others go on. The script exits 0 whatever happens, and the step has `continue-on-error: true` and its own five-minute limit, so it can neither fail nor hold up the spec, the publish or the proposals. It proposes nothing and changes nothing.
+
+Run 2026-11-18 in /tmp/formadaptor-b5 against a fake GitHub on 127.0.0.1:28020 serving the sample spec's 23 public apps (86 calls): FormCut "adds agents/manifest.json" (none at its tag); FormDesign "adds skill folders formdesign-export"; FormVis "adds tools crop_image; drops sub-skills of formvis-harness: export"; FormWav, whose main tree was answered truncated, "could not be compared"; the other 19 nothing. Summary file and stdout the same. With the fake stopped, every app said "could not be compared" and the exit was 0; with no family file, one warning and exit 0. actionlint v1.7.12 passed hourly.yml with the new step.
+
 ### propose.yml · one job per target, one token per target
 - refers-to: .github/workflows/propose.yml :: targets, propose
 - kind: feature
