@@ -30,3 +30,14 @@ formcompiler stays the source of truth for which apps exist. `load` reads `apps/
 `spec/ids.json` is hand-written and committed so a reviewer sees the id pairs in one place. `ids --check` compares its `repo` and `catalog` with the registry and refuses an id used twice. `site` is not compared: today the site path is the catalogue id for every app, and the file is where they would part if the site ever moved an app. The registry version is formcompiler's `VERSION`, not its commit, so a registry commit that changes nothing formadaptor reads does not change the spec.
 
 Run 2026-11-18 on a copy of the formcompiler clone in /tmp/formadaptor-smoke: 31 entries, 30 enabled, `ids --check` in step (rc 0); with formdeck's catalogue id changed to `formdeck` in the copy it named that one problem (rc 1); a folder that is not a checkout stopped with a message (rc 1).
+
+### visibility.py · 200 with private false is public; every other answer is private, except no answer
+- refers-to: scripts/visibility.py :: public, STOP
+- kind: feature
+- logged: v0.1.0 · 2026-11-18
+
+The owner's rule: public lists carry only apps whose repository is public. `GET /repos/nodemode-dev/<repo>` with the workflow's built-in token sees public repositories and nothing private outside formadaptor, so a 200 whose `private` is `false` is public and 404 (or 401, or a 403 that is not a rate limit, or a body that is not an object) is private. A missing `private` field counts as private, as in formcompiler's `catalog.py`.
+
+One exception, on purpose: a 429, a 5xx, a 403 with `x-ratelimit-remaining: 0` or no answer at all stops the build with `ApiError`. Read as "private", a GitHub outage would build a spec with every app private, publish it, and propose pull requests that empty every target's list. Stopping keeps the published spec as it was until the next hourly run.
+
+Run 2026-11-18 against the fake server on 127.0.0.1:25101 built from the clones: formvis and formcut answered public, formfabric and formREC (no clone, so 404) private.
