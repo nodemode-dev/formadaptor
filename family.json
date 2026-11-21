@@ -1,12 +1,12 @@
 {
   "format": "formai-family",
   "format_version": 1,
-  "generated": "2026-11-21T11:37:16Z",
+  "generated": "2026-11-21T19:39:51Z",
   "source": {
     "repository": "nodemode-dev/formcompiler",
-    "registry_version": "0.19.0"
+    "registry_version": "0.20.0"
   },
-  "content_sha256": "249e32da92715a282d661568f80067f77ad9516273a1b282f86ce07d1a98c7a1",
+  "content_sha256": "ab5d85b2227e43d6ccb86adca45df9015a68f2d7c7c794a71d4d4863b51faa38",
   "apps": [
     {
       "id": "formai",
@@ -26,10 +26,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "0.70.0",
-        "tag": "v0.70.0",
-        "published": "2026-11-21T01:43:55Z",
-        "url": "https://github.com/nodemode-dev/formportal/releases/tag/v0.70.0",
+        "version": "0.70.2",
+        "tag": "v0.70.2",
+        "published": "2026-11-21T17:30:18Z",
+        "url": "https://github.com/nodemode-dev/formportal/releases/tag/v0.70.2",
         "skills": [
           "formportal-harness",
           "formportal-skillset"
@@ -78,10 +78,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "0.31.0",
-        "tag": "v0.31.0",
-        "published": "2026-11-21T03:52:11Z",
-        "url": "https://github.com/nodemode-dev/formAT/releases/tag/v0.31.0",
+        "version": "0.32.0",
+        "tag": "v0.32.0",
+        "published": "2026-11-21T17:30:14Z",
+        "url": "https://github.com/nodemode-dev/formAT/releases/tag/v0.32.0",
         "skills": [
           "format-driving",
           "format-harness"
@@ -195,10 +195,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "2.20.0",
-        "tag": "v2.20.0",
-        "published": "2026-11-21T01:44:10Z",
-        "url": "https://github.com/nodemode-dev/formcut/releases/tag/v2.20.0",
+        "version": "2.20.1",
+        "tag": "v2.20.1",
+        "published": "2026-11-21T17:30:23Z",
+        "url": "https://github.com/nodemode-dev/formcut/releases/tag/v2.20.1",
         "skills": [
           "formcut-mcp",
           "formcut-skillset"
@@ -462,10 +462,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "0.29.0",
-        "tag": "v0.29.0",
-        "published": "2026-11-21T01:44:03Z",
-        "url": "https://github.com/nodemode-dev/formfabric/releases/tag/v0.29.0",
+        "version": "0.30.0",
+        "tag": "v0.30.0",
+        "published": "2026-11-21T17:30:17Z",
+        "url": "https://github.com/nodemode-dev/formfabric/releases/tag/v0.30.0",
         "skills": [
           "formfabric-harness",
           "formfabric-modeling"
@@ -576,10 +576,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "0.14.0",
-        "tag": "v0.14.0",
-        "published": "2026-11-21T01:44:11Z",
-        "url": "https://github.com/nodemode-dev/formMCP/releases/tag/v0.14.0",
+        "version": "0.14.1",
+        "tag": "v0.14.1",
+        "published": "2026-11-21T17:30:24Z",
+        "url": "https://github.com/nodemode-dev/formMCP/releases/tag/v0.14.1",
         "skills": [
           "formmcp-harness"
         ]
@@ -603,10 +603,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "0.60.0",
-        "tag": "v0.60.0",
-        "published": "2026-11-21T01:44:06Z",
-        "url": "https://github.com/nodemode-dev/form.md/releases/tag/v0.60.0",
+        "version": "0.61.0",
+        "tag": "v0.61.0",
+        "published": "2026-11-21T17:30:21Z",
+        "url": "https://github.com/nodemode-dev/form.md/releases/tag/v0.61.0",
         "skills": [
           "contextual-compression"
         ]
@@ -839,10 +839,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "1.26.0",
-        "tag": "v1.26.0",
-        "published": "2026-11-21T05:17:18Z",
-        "url": "https://github.com/nodemode-dev/formsculpt/releases/tag/v1.26.0",
+        "version": "1.27.0",
+        "tag": "v1.27.0",
+        "published": "2026-11-21T17:30:20Z",
+        "url": "https://github.com/nodemode-dev/formsculpt/releases/tag/v1.27.0",
         "skills": [
           "formsculpt-harness",
           "formsculpt-modeling"
@@ -919,10 +919,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "0.46.1",
-        "tag": "v0.46.1",
-        "published": "2026-11-21T05:17:20Z",
-        "url": "https://github.com/nodemode-dev/formdeck/releases/tag/v0.46.1",
+        "version": "0.46.3",
+        "tag": "v0.46.3",
+        "published": "2026-11-21T17:30:15Z",
+        "url": "https://github.com/nodemode-dev/formdeck/releases/tag/v0.46.3",
         "skills": [
           "formdeck-harness",
           "formdeck-skillset"
@@ -977,10 +977,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "0.67.0",
-        "tag": "v0.67.0",
-        "published": "2026-11-21T01:43:53Z",
-        "url": "https://github.com/nodemode-dev/formsurface/releases/tag/v0.67.0",
+        "version": "0.68.0",
+        "tag": "v0.68.0",
+        "published": "2026-11-21T17:30:25Z",
+        "url": "https://github.com/nodemode-dev/formsurface/releases/tag/v0.68.0",
         "skills": [
           "formsurface-harness",
           "formsurface-painting"
