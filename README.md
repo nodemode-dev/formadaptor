@@ -16,4 +16,4 @@ python3 -I scripts/propose.py run --target formai-templates --checkout ../formai
 python3 -I scripts/advisory.py --family family.json
 ```
 
-Version 0.2.0. Licence: GPL-3.0-only (see LICENSE and NOTICE).
+Version 0.2.1. Licence: GPL-3.0-only (see LICENSE and NOTICE).

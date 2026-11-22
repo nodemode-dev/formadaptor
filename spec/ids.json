@@ -17,6 +17,7 @@
     {"app": "formencoder", "repo": "formencoder", "catalog": "formencoder", "site": "formencoder"},
     {"app": "formfabric", "repo": "formfabric", "catalog": "formfabric", "site": "formfabric"},
     {"app": "formlit", "repo": "formlit", "catalog": "formlit", "site": "formlit"},
+    {"app": "formmorpheus", "repo": "formmorpheus", "catalog": "formmorpheus", "site": "formmorpheus"},
     {"app": "formpath", "repo": "formpath", "catalog": "formpath", "site": "formpath"},
     {"app": "formpdf", "repo": "formpdf", "catalog": "formpdf", "site": "formpdf"},
     {"app": "formportal", "repo": "formportal", "catalog": "formai", "site": "formai"},
