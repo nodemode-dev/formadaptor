@@ -45,7 +45,7 @@ jobs:
     needs: targets
     if: github.repository == 'nodemode-dev/formadaptor' && github.ref == 'refs/heads/main' && needs.targets.outputs.matrix != '[]'
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -64,6 +64,7 @@ jobs:
       - name: App token for this target only
         id: app-token
         if: inputs.target == '' || inputs.target == matrix.name
+        continue-on-error: true
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ secrets.FORMADAPTOR_APP_ID }}
@@ -73,15 +74,37 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        if: inputs.target == '' || inputs.target == matrix.name
+        id: target
+        if: (inputs.target == '' || inputs.target == matrix.name) && steps.app-token.outcome == 'success'
+        continue-on-error: true
         with:
           repository: ${{ matrix.repository }}
           ref: main
           path: target
           token: ${{ steps.app-token.outputs.token }}
           persist-credentials: false
-      - name: Run the target's generator and propose the difference
+      - name: Is the target reachable
+        id: reach
         if: inputs.target == '' || inputs.target == matrix.name
+        env:
+          TOKEN_OUTCOME: ${{ steps.app-token.outcome }}
+          CHECKOUT_OUTCOME: ${{ steps.target.outcome }}
+          TARGET: ${{ matrix.name }}
+          REPOSITORY: ${{ matrix.repository }}
+        run: |
+          if [ "$TOKEN_OUTCOME" = success ] && [ "$CHECKOUT_OUTCOME" = success ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "$TARGET: $REPOSITORY is not reachable (not created yet, no main, or the App is not installed on it), skipped" | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: The apps at their released tags, where the target's generator reads them
+        if: steps.reach.outputs.ok == 'true'
+        env:
+          TARGET: ${{ matrix.name }}
+        run: python3 -I adaptor/scripts/propose.py checkouts --target "$TARGET" --checkout target --family "$RUNNER_TEMP/family.json"
+      - name: Run the target's generator and propose the difference
+        if: steps.reach.outputs.ok == 'true'
         env:
           FORMADAPTOR_TARGET_TOKEN: ${{ steps.app-token.outputs.token }}
           TARGET: ${{ matrix.name }}

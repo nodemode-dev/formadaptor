@@ -230,7 +230,7 @@ def test_an_open_pull_request_for_the_same_change_stops_a_second_push(tmp_path, 
 def test_the_targets_file_loads_and_lists_the_enabled_ones():
     result = script("propose.py", "matrix")
     assert result.returncode == 0
-    assert [t["name"] for t in json.loads(result.stdout)] == ["formmcp", "formskills", "formext"]
+    assert [t["name"] for t in json.loads(result.stdout)] == ["formmcp", "formskills", "formext", "formai-templates"]
 
 
 def test_a_disabled_target_is_a_skip_not_a_failure(tmp_path):
@@ -256,3 +256,81 @@ def test_a_bad_target_entry_is_refused(tmp_path):
     (tmp_path / "t.json").write_text(json.dumps({"format": "formadaptor-targets", "format_version": 1, "targets": [bad]}))
     with pytest.raises(propose.ProposeError, match="command must be a non-empty list of arguments; files must list plain paths"):
         propose.load_targets(tmp_path / "t.json")
+
+
+STANDIN_GIT = """#!/usr/bin/env python3
+import json, os, sys
+from pathlib import Path
+with open(LOG, "a") as log:
+    log.write(json.dumps({"argv": sys.argv[1:], "env": sorted(os.environ)}) + "\\n")
+Path(sys.argv[-1]).mkdir(parents=True)
+"""
+
+
+def apps_family(tmp_path):
+    doc = {"format": spec.FORMAT, "format_version": 1, "generated": "2026-11-22T00:00:00Z",
+           "source": {"repository": "nodemode-dev/formcompiler", "registry_version": "0.16.1"}, "content_sha256": "",
+           "apps": [{"id": "formext", "public": True, "repo": "form.ext", "repository": "nodemode-dev/form.ext", "release": {"version": "0.10.0", "tag": "v0.10.0"}},
+                    {"id": "formhidden", "public": False},
+                    {"id": "formnew", "public": True, "repo": "formnew", "repository": "nodemode-dev/formnew", "release": None},
+                    {"id": "formtxt", "public": True, "repo": "formtxt", "repository": "nodemode-dev/formtxt", "release": {"version": "0.38.0", "tag": "v0.38.0"}}]}
+    doc["content_sha256"] = spec.content_hash(doc)
+    path = tmp_path / "family.json"
+    path.write_text(spec.text_of(doc))
+    return path
+
+
+def test_the_templates_target_reads_each_app_at_its_released_tag_beside_its_checkout():
+    target = {t["name"]: t for t in propose.load_targets()}["formai-templates"]
+    assert target["enabled"] is True and target["repository"] == "nodemode-dev/formai-templates"
+    assert target["command"] == ["python3", "-I", "scripts/collect.py", "--apps-root", "../formai-templates-apps"]
+    assert target["app_checkouts"] == "../formai-templates-apps"
+    assert target["files"] == ["apps/", "index.json", "scripts/family.spec.json"] and target["spec_copy"] == "scripts/family.spec.json"
+
+
+def test_app_checkouts_are_public_released_apps_at_their_tags_with_no_token(tmp_path, monkeypatch):
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    log = tmp_path / "git.log"
+    (bin_dir / "git").write_text(STANDIN_GIT.replace("LOG,", f"{str(log)!r},"))
+    (bin_dir / "git").chmod(0o755)
+    monkeypatch.setenv("PATH", f"{bin_dir}:/usr/bin:/bin")
+    monkeypatch.setenv("FORMADAPTOR_TARGET_TOKEN", "secret")
+    monkeypatch.setenv("GH_TOKEN", "secret")
+    monkeypatch.delenv("FORMADAPTOR_GIT_BASE", raising=False)
+    (tmp_path / "target").mkdir()
+    target = dict(TARGET, app_checkouts="../apps")
+    fetched = propose.fetch_apps(target, tmp_path / "target", spec.load(apps_family(tmp_path)))
+    assert fetched == ["form.ext", "formtxt"]
+    calls = [json.loads(line) for line in log.read_text().splitlines()]
+    assert [c["argv"][-4:] for c in calls] == [
+        ["v0.10.0", "--", "https://github.com/nodemode-dev/form.ext.git", str(tmp_path / "apps" / "form.ext")],
+        ["v0.38.0", "--", "https://github.com/nodemode-dev/formtxt.git", str(tmp_path / "apps" / "formtxt")],
+    ]
+    assert all({"clone", "--depth", "--single-branch", "--branch"} <= set(c["argv"]) and "core.hooksPath=/dev/null" in c["argv"] for c in calls)
+    assert all(not {"FORMADAPTOR_TARGET_TOKEN", "GH_TOKEN", "GITHUB_TOKEN"} & set(c["env"]) for c in calls)
+
+
+def test_app_checkouts_go_only_into_a_new_folder_beside_the_checkout(tmp_path):
+    for inside in ("apps", "../..", "../a/b", "/tmp/apps"):
+        (tmp_path / "t.json").write_text(json.dumps({"format": "formadaptor-targets", "format_version": 1, "targets": [dict(TARGET, app_checkouts=inside)]}))
+        with pytest.raises(propose.ProposeError, match="app_checkouts must be one folder beside the checkout"):
+            propose.load_targets(tmp_path / "t.json")
+    (tmp_path / "apps" / "kept").mkdir(parents=True)
+    with pytest.raises(propose.ProposeError, match="is not empty"):
+        propose.fetch_apps(dict(TARGET, app_checkouts="../apps"), tmp_path / "target", spec.load(apps_family(tmp_path)))
+    assert (tmp_path / "apps" / "kept").is_dir()
+
+
+def test_a_target_without_app_checkouts_needs_none(tmp_path):
+    result = script("propose.py", "checkouts", "--target", "formmcp", "--checkout", str(tmp_path), "--family", str(tmp_path / "no-family.json"))
+    assert result.returncode == 0 and "formmcp: needs no app checkouts" in result.stdout
+
+
+def test_a_long_list_of_changed_files_is_cut_in_the_body_and_keeps_the_copy():
+    doc = json.loads(spec.text_of({"content_sha256": "0" * 64, "source": {"registry_version": "0.16.1"}}))
+    paths = [f"apps/formx/demos/d{i:03}.zip" for i in range(120)] + ["scripts/family.spec.json"]
+    body = propose.body_of(dict(TARGET, spec_copy="scripts/family.spec.json"), doc, None, paths)
+    assert body.count("\n- `") == propose.LISTED
+    assert "- `scripts/family.spec.json` (the copy of the spec it was generated from)" in body
+    assert f"- and {len(paths) - propose.LISTED} more files" in body
