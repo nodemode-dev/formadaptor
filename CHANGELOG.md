@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.2 · 2026-11-22
+
+- `spec/ids.json` gains FormSubstrate (`nodemode-dev/formsubstrate`, catalogue and site id `formsubstrate`) and FormSlot (`nodemode-dev/formslot`, catalogue and site id `formslot`), rows 34 and 35. formcompiler 0.22.0 registers both, switched off, and `ids --check` compares every registry entry, so the hourly build would stop without them. Neither enters `family.json` while it is switched off. Merge formcompiler 0.22.0 first and this right after.
+
 ## v0.2.1 · 2026-11-22
 
 - `spec/ids.json` gains FormMorpheus (`nodemode-dev/formmorpheus`, catalogue and site id `formmorpheus`), private until released, as the 33rd row. Its registry entry is on formcompiler's branch `feat/register-morpheus-publisher`: merge that first and this right after, since the build stops while the two disagree. FormPublisher's row already matched.

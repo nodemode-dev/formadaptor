@@ -2,7 +2,7 @@
 
 Living log of all comment content, explainers, rationale, TODOs and removed code for the adaptor (the scripts and the workflows). The source files stay comment-free per dev-rules `sub-skills/hashout-log/SUB-SKILL.md`; everything they would have said lives here, indexed. Read this first, then edit code surgically.
 
-Current build version: v0.2.1
+Current build version: v0.2.2
 Last updated: 2026-11-22 · FormSubstrate's and FormSlot's id pairs (v0.2.2)
 
 ### ids.json · rows 34 and 35, FormSubstrate and FormSlot, both switched off in the registry
