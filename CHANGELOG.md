@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.2.0 · 2026-11-21
+
+- formai-templates is a target. It gathers every public app's templates and demos for FormPortal's optional download, with its own `scripts/collect.py --apps-root ../formai-templates-apps`; its files are `apps/`, `index.json` and the kept copy `scripts/family.spec.json`. After an app publishes a release, the next run proposes that app's new or changed templates and demos there.
+- A target may declare `app_checkouts`, one new folder beside its checkout (`../<folder>`). `scripts/propose.py checkouts` fills it before the generator runs: a shallow clone of each app the spec lists as public with a release, at `release.tag`, over https with no token and hooks off; nothing in them is run, a private app is never fetched, and a folder that already holds anything is refused.
+- propose.yml: a target that cannot be reached (not created yet, no `main`, or the App not installed on it) is a skip with one line in the summary, and the other targets go on. The app checkouts step runs before the generator; the job's limit is 30 minutes.
+- A proposal is still one commit pushed with git, so media files (up to 50 MB each in formai-templates) and many files at once need nothing new. The pull request body names at most 50 changed files, the kept copy first.
+- docs/OWNER_SETUP.md step 11: create `nodemode-dev/formai-templates`, push its `main`, add it to the App's installation. No new secret.
+- 87 tests in 5 files.
+
 ## v0.1.0 · 2026-11-19
 
 - The first build. `scripts/spec.py` builds `family.json` (format `formai-family`, version 1) from formcompiler's registry, each repository's visibility on GitHub and each public app's newest stable, non-yanked release, with counts from the app's `agents/manifest.json` when it has one. A private app appears only as its id with `public: false`.

@@ -2,7 +2,7 @@
 
 Living log of all comment content, explainers, rationale, TODOs and removed code for the adaptor (the scripts and the workflows). The source files stay comment-free per dev-rules `sub-skills/hashout-log/SUB-SKILL.md`; everything they would have said lives here, indexed. Read this first, then edit code surgically.
 
-Current build version: v0.1.0
+Current build version: v0.2.0
 Last updated: 2026-11-21 · formai-templates is a target; app checkouts at released tags (v0.2.0)
 
 ### targets.json, propose.py, propose.yml · formai-templates, and the apps' source at their released tags beside the checkout
