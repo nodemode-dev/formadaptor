@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.1 · 2026-11-22
+
+- `spec/ids.json` gains FormMorpheus (`nodemode-dev/formmorpheus`, catalogue and site id `formmorpheus`), private until released, as the 33rd row. Its registry entry is on formcompiler's branch `feat/register-morpheus-publisher`: merge that first and this right after, since the build stops while the two disagree. FormPublisher's row already matched.
+- SubForm, now FormSubstrate, was named nowhere in this repository and has no registry entry yet, so nothing was renamed; its row joins when the registry has it.
+
 ## v0.2.0 · 2026-11-21
 
 - formai-templates is a target. It gathers every public app's templates and demos for FormPortal's optional download, with its own `scripts/collect.py --apps-root ../formai-templates-apps`; its files are `apps/`, `index.json` and the kept copy `scripts/family.spec.json`. After an app publishes a release, the next run proposes that app's new or changed templates and demos there.
