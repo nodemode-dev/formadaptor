@@ -1,12 +1,12 @@
 {
   "format": "formai-family",
   "format_version": 1,
-  "generated": "2026-11-21T19:39:51Z",
+  "generated": "2026-11-22T08:36:01Z",
   "source": {
     "repository": "nodemode-dev/formcompiler",
-    "registry_version": "0.20.0"
+    "registry_version": "0.21.0"
   },
-  "content_sha256": "ab5d85b2227e43d6ccb86adca45df9015a68f2d7c7c794a71d4d4863b51faa38",
+  "content_sha256": "003110cd51d96117cb9b47b074d9b94dd386d7712bdaafcfd9d44b545050018f",
   "apps": [
     {
       "id": "formai",
@@ -642,6 +642,10 @@
       }
     },
     {
+      "id": "formmorpheus",
+      "public": false
+    },
+    {
       "id": "formnet",
       "public": false
     },
@@ -761,6 +765,10 @@
     },
     {
       "id": "formpromo",
+      "public": false
+    },
+    {
+      "id": "formpublisher",
       "public": false
     },
     {
