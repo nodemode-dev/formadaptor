@@ -1,12 +1,12 @@
 {
   "format": "formai-family",
   "format_version": 1,
-  "generated": "2026-11-22T08:36:01Z",
+  "generated": "2026-11-22T17:19:11Z",
   "source": {
     "repository": "nodemode-dev/formcompiler",
     "registry_version": "0.21.0"
   },
-  "content_sha256": "003110cd51d96117cb9b47b074d9b94dd386d7712bdaafcfd9d44b545050018f",
+  "content_sha256": "4023dbbd776ab3d8dfaa38c9967640512b7adad7a410d4f2db3ca0b12227139c",
   "apps": [
     {
       "id": "formai",
@@ -26,10 +26,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "0.70.2",
-        "tag": "v0.70.2",
-        "published": "2026-11-21T17:30:18Z",
-        "url": "https://github.com/nodemode-dev/formportal/releases/tag/v0.70.2",
+        "version": "0.71.3",
+        "tag": "v0.71.3",
+        "published": "2026-11-22T08:45:18Z",
+        "url": "https://github.com/nodemode-dev/formportal/releases/tag/v0.71.3",
         "skills": [
           "formportal-harness",
           "formportal-skillset"
@@ -1069,10 +1069,10 @@
         "skills": ""
       },
       "release": {
-        "version": "0.17.0",
-        "tag": "v0.17.0",
-        "published": "2026-11-20T01:10:06Z",
-        "url": "https://github.com/nodemode-dev/formtray/releases/tag/v0.17.0",
+        "version": "0.17.2",
+        "tag": "v0.17.2",
+        "published": "2026-11-22T08:45:17Z",
+        "url": "https://github.com/nodemode-dev/formtray/releases/tag/v0.17.2",
         "skills": []
       }
     },
