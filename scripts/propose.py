@@ -18,9 +18,14 @@ NAME = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
 REPOSITORY = re.compile(r"^nodemode-dev/[A-Za-z0-9._-]+$")
 PREFIX = re.compile(r"^bot/[a-z0-9-]+-$")
 FILE = re.compile(r"^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*/?$")
+APP_CHECKOUTS = re.compile(r"^\.\./(?!\.{1,2}$)[A-Za-z0-9._-]+$")
+APP_REPO = re.compile(r"^[A-Za-z0-9._-]+$")
+APP_TAG = re.compile(r"^v\d+\.\d+\.\d+$")
 BASE = "main"
 IDENTITY = ("nodemode-ai", "mackin@nodemode.ai")
 GENERATOR_TIMEOUT = 600
+FETCH_TIMEOUT = 600
+LISTED = 50
 
 
 class ProposeError(Exception):
@@ -52,6 +57,8 @@ def load_targets(path=TARGETS):
             problems.append("spec_copy must name the target's copy of the spec, one of its files")
         if not PREFIX.match(target.get("branch_prefix", "")):
             problems.append("branch_prefix must look like bot/<name>-")
+        if "app_checkouts" in target and not (isinstance(target["app_checkouts"], str) and APP_CHECKOUTS.match(target["app_checkouts"])):
+            problems.append("app_checkouts must be one folder beside the checkout, ../<name>")
         if problems:
             raise ProposeError(f"target {name or '?'}: {'; '.join(problems)}")
         seen.add(name)
@@ -119,11 +126,50 @@ def change_hash(checkout, paths):
     return digest.hexdigest()
 
 
+def listed_paths(target, paths):
+    if len(paths) <= LISTED:
+        return paths
+    copy = [p for p in paths if p == target.get("spec_copy")]
+    return copy + [p for p in paths if p not in copy][:LISTED - len(copy)]
+
+
+def fetch_apps(target, checkout, family_doc):
+    if "app_checkouts" not in target:
+        return None
+    root = (Path(checkout).resolve() / target["app_checkouts"]).resolve()
+    if root.exists() and any(root.iterdir()):
+        raise ProposeError(f"{target['name']}: {root} is not empty; the app checkouts are only ever made in a new folder")
+    base = os.environ.get("FORMADAPTOR_GIT_BASE", "https://github.com").rstrip("/")
+    env = dict(generator_env(), GIT_TERMINAL_PROMPT="0", GIT_LFS_SKIP_SMUDGE="1")
+    fetched = []
+    for app in public_apps(family_doc) or []:
+        release = app.get("release")
+        if not isinstance(release, dict):
+            continue
+        repo, repository, tag = app.get("repo", ""), app.get("repository", ""), release.get("tag", "")
+        if not (isinstance(repo, str) and APP_REPO.match(repo) and repo not in (".", "..") and repository == f"nodemode-dev/{repo}"
+                and isinstance(tag, str) and APP_TAG.match(tag)):
+            raise ProposeError(f"{target['name']}: app {app.get('id', '?')} has no plain repository and released tag in the spec")
+        root.mkdir(parents=True, exist_ok=True)
+        argv = ["git", "-c", "core.hooksPath=/dev/null", "-c", "advice.detachedHead=false", "clone", "-q", "--depth", "1",
+                "--single-branch", "--no-tags", "--branch", tag, "--", f"{base}/{repository}.git", str(root / repo)]
+        try:
+            result = subprocess.run(argv, capture_output=True, text=True, env=env, timeout=FETCH_TIMEOUT)
+        except (OSError, subprocess.TimeoutExpired) as error:
+            raise ProposeError(f"{target['name']}: {repository} at {tag} was not fetched: {error}") from None
+        if result.returncode != 0:
+            raise ProposeError(f"{target['name']}: {repository} at {tag} was not fetched: {result.stderr.strip()[:300]}")
+        print(f"  {target['name']}: {repo} at {tag}")
+        fetched.append(repo)
+    return fetched
+
+
 def body_of(target, family_doc, previous_doc, paths):
     lines = [
         f"The family spec changed and `{' '.join(target['command'])}` in this repository, run with `--family family.json`, writes:",
         "",
-        *[f"- `{p}`" + (" (the copy of the spec it was generated from)" if p == target.get("spec_copy") else "") for p in paths],
+        *[f"- `{p}`" + (" (the copy of the spec it was generated from)" if p == target.get("spec_copy") else "") for p in listed_paths(target, paths)],
+        *([f"- and {len(paths) - LISTED} more files"] if len(paths) > LISTED else []),
         "",
     ]
     found = spec.changes(previous_doc, family_doc) if previous_doc else []
@@ -245,11 +291,27 @@ def main():
     run.add_argument("--previous", help="the spec before this one, for the title")
     run.add_argument("--dry-run", action="store_true", help="say what would be proposed; push and open nothing")
     run.add_argument("--targets", default=str(TARGETS))
+    apps = sub.add_parser("checkouts", help="fetch each public released app at its tag where the target's generator reads them")
+    apps.add_argument("--target", required=True)
+    apps.add_argument("--checkout", required=True, help="the checkout of the target repository the generator will run in")
+    apps.add_argument("--family", required=True)
+    apps.add_argument("--targets", default=str(TARGETS))
     args = parser.parse_args()
     try:
         if args.command == "matrix":
             rows = [{"name": t["name"], "repository": t["repository"], "repo": t["repository"].split("/", 1)[1]} for t in load_targets() if t["enabled"]]
             print(json.dumps(rows, separators=(",", ":")))
+            return 0
+        if args.command == "checkouts":
+            target = find(load_targets(args.targets), args.target)
+            if not target["enabled"] or "app_checkouts" not in target:
+                print(f"{target['name']}: needs no app checkouts")
+                return 0
+            family_doc = spec.load(args.family)
+            if family_doc is None or family_doc.get("content_sha256") != spec.content_hash(family_doc):
+                raise ProposeError("the family spec is missing or does not match its own content_sha256")
+            fetched = fetch_apps(target, Path(args.checkout), family_doc)
+            print(f"{target['name']}: {len(fetched)} public apps at their released tags in {target['app_checkouts']}")
             return 0
         target = find(load_targets(args.targets), args.target)
         if not target["enabled"]:

@@ -74,10 +74,21 @@ def test_the_app_token_is_for_one_repository():
     assert text.count("persist-credentials: false") == text.count("actions/checkout@")
 
 
+def test_a_target_that_cannot_be_reached_is_a_skip_and_its_apps_are_fetched_first():
+    steps = (REPO / ".github" / "workflows" / "propose.yml").read_text().split("\n      - ")
+    token = next(s for s in steps if "id: app-token" in s)
+    fetch = next(s for s in steps if "propose.py checkouts" in s)
+    run = next(s for s in steps if "propose.py run" in s)
+    assert "continue-on-error: true" in token
+    assert "is not reachable" in next(s for s in steps if "id: reach" in s)
+    assert all("if: steps.reach.outputs.ok == 'true'" in s for s in (fetch, run))
+    assert steps.index(fetch) < steps.index(run) and "FORMADAPTOR_TARGET_TOKEN" not in fetch
+
+
 def test_every_version_site_agrees():
     found = {}
     for name, pattern in VERSION_SITES:
         match = re.search(pattern, (REPO / name).read_text(encoding="utf-8"), re.M)
         assert match, name
         found[name] = match.group(1)
-    assert set(found.values()) == {"0.1.0"}, found
+    assert set(found.values()) == {"0.2.0"}, found

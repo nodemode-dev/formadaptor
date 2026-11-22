@@ -37,6 +37,16 @@
       "files": [".claude/skills/HOSTS.md", "setup/hosts.json", "setup/family.spec.json"],
       "spec_copy": "setup/family.spec.json",
       "branch_prefix": "bot/formadaptor-"
+    },
+    {
+      "name": "formai-templates",
+      "repository": "nodemode-dev/formai-templates",
+      "enabled": true,
+      "command": ["python3", "-I", "scripts/collect.py", "--apps-root", "../formai-templates-apps"],
+      "files": ["apps/", "index.json", "scripts/family.spec.json"],
+      "spec_copy": "scripts/family.spec.json",
+      "app_checkouts": "../formai-templates-apps",
+      "branch_prefix": "bot/formadaptor-"
     }
   ]
 }
