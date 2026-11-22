@@ -3,7 +3,18 @@
 Living log of all comment content, explainers, rationale, TODOs and removed code for the adaptor (the scripts and the workflows). The source files stay comment-free per dev-rules `sub-skills/hashout-log/SUB-SKILL.md`; everything they would have said lives here, indexed. Read this first, then edit code surgically.
 
 Current build version: v0.2.0
-Last updated: 2026-11-21 · formai-templates is a target; app checkouts at released tags (v0.2.0)
+Last updated: 2026-11-22 · FormMorpheus's id pair; nothing named SubForm (v0.2.1)
+
+### ids.json · the 33rd row, FormMorpheus; no SubForm to rename
+- refers-to: spec/ids.json; tests/test_sources.py :: test_ids_file_pairs_every_registry_entry_once
+- kind: change
+- logged: v0.2.1 · 2026-11-22
+
+The owner renamed an unreleased app, SubForm, to FormSubstrate (repository `nodemode-dev/formsubstrate`, catalogue and site id `formsubstrate`). A case-insensitive search of every tracked file found no `subform`, and formcompiler's registry has no entry under either name, so nothing here is renamed and no `formsubstrate` row is added: a row with no registry entry fails `ids --check`. It joins this file when the registry has it.
+
+Two facts were checked against the file. FormPublisher's row was already `nodemode-dev/formpublisher`, catalogue and site id `formpublisher`. FormMorpheus (`nodemode-dev/formmorpheus`, id `formmorpheus`) was missing, and the file lists every enabled registry entry, private ones included (formCAD's row), so it gains a row. Its registry entry, `apps/formmorpheus.json`, is on formcompiler's branch `feat/register-morpheus-publisher` and not yet on formcompiler's `main`. That makes the order of the two merges matter. The build stops when this file and the registry disagree in either direction, and so does `ids --check`. Merge formcompiler's branch first and this one right after. Until both are merged, the hourly build stops and the published spec stays as it was; self-check's id step fails here only while this is merged and formcompiler's is not.
+
+Run 2026-11-22: `registry.py ids --check` against the local formcompiler checkout on that branch gave "33 registry entries, in step". Against an extract of formcompiler's `origin/main` it gave "formmorpheus: in spec/ids.json, not in the registry" (rc 1), as expected until that merge. The suite: 87 passed.
 
 ### targets.json, propose.py, propose.yml · formai-templates, and the apps' source at their released tags beside the checkout
 - refers-to: targets.json :: formai-templates; scripts/propose.py :: APP_CHECKOUTS, fetch_apps, listed_paths, body_of, main (checkouts); .github/workflows/propose.yml :: propose (steps app-token, target, reach, "The apps at their released tags"); docs/TARGETS.md; docs/OWNER_SETUP.md step 11
