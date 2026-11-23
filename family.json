@@ -1,12 +1,12 @@
 {
   "format": "formai-family",
   "format_version": 1,
-  "generated": "2026-11-22T22:43:07Z",
+  "generated": "2026-11-23T03:54:56Z",
   "source": {
     "repository": "nodemode-dev/formcompiler",
     "registry_version": "0.21.0"
   },
-  "content_sha256": "fc3a8b565b338b2238dc31e9756d02e7d347e4fe97dbaf167bb6d3aa8eac9634",
+  "content_sha256": "255fcabe23b743596b6611b8b1bc11621cca813011b864ca12d84025c0aad594",
   "apps": [
     {
       "id": "formai",
@@ -134,7 +134,16 @@
         "mcp": true,
         "skills": "skills"
       },
-      "release": null
+      "release": {
+        "version": "0.30.0",
+        "tag": "v0.30.0",
+        "published": "2026-11-23T02:07:56Z",
+        "url": "https://github.com/nodemode-dev/formCAD/releases/tag/v0.30.0",
+        "skills": [
+          "formcad-driving",
+          "formcad-harness"
+        ]
+      }
     },
     {
       "id": "formcel",
@@ -618,10 +627,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "0.61.0",
-        "tag": "v0.61.0",
-        "published": "2026-11-21T17:30:21Z",
-        "url": "https://github.com/nodemode-dev/form.md/releases/tag/v0.61.0",
+        "version": "0.61.1",
+        "tag": "v0.61.1",
+        "published": "2026-11-22T23:39:46Z",
+        "url": "https://github.com/nodemode-dev/form.md/releases/tag/v0.61.1",
         "skills": [
           "contextual-compression"
         ]
@@ -673,7 +682,13 @@
         "mcp": false,
         "skills": ""
       },
-      "release": null
+      "release": {
+        "version": "0.23.3",
+        "tag": "v0.23.3",
+        "published": "2026-11-23T02:07:58Z",
+        "url": "https://github.com/nodemode-dev/formmorpheus/releases/tag/v0.23.3",
+        "skills": []
+      }
     },
     {
       "id": "formnet",
@@ -814,7 +829,16 @@
         "mcp": true,
         "skills": ".claude/skills"
       },
-      "release": null
+      "release": {
+        "version": "0.10.1",
+        "tag": "v0.10.1",
+        "published": "2026-11-23T02:07:57Z",
+        "url": "https://github.com/nodemode-dev/formpublisher/releases/tag/v0.10.1",
+        "skills": [
+          "formpublisher-harness",
+          "formpublisher-skillset"
+        ]
+      }
     },
     {
       "id": "formrec",
@@ -1371,10 +1395,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "0.27.0",
-        "tag": "v0.27.0",
-        "published": "2026-11-21T01:44:08Z",
-        "url": "https://github.com/nodemode-dev/formweb/releases/tag/v0.27.0",
+        "version": "0.28.0",
+        "tag": "v0.28.0",
+        "published": "2026-11-23T02:08:00Z",
+        "url": "https://github.com/nodemode-dev/formweb/releases/tag/v0.28.0",
         "skills": [
           "formweb-editing",
           "formweb-harness",
