@@ -2,8 +2,27 @@
 
 Living log of all comment content, explainers, rationale, TODOs and removed code for the adaptor (the scripts and the workflows). The source files stay comment-free per dev-rules `sub-skills/hashout-log/SUB-SKILL.md`; everything they would have said lives here, indexed. Read this first, then edit code surgically.
 
-Current build version: v0.2.3
-Last updated: 2026-11-25 · FormCraft's and FormRig's id pairs (v0.2.3)
+Current build version: v0.3.0
+Last updated: 2026-11-26 · plan, changed and apply; no secret in this repository (v0.3.0)
+
+### propose.py · plan, changed and apply; no secret in this repository
+- refers-to: scripts/propose.py :: plan_command, write_plan, changed_plans, checked_plan, apply_plan, apply_command; .github/workflows/hourly.yml; tests/test_workflows.py :: test_no_workflow_holds_a_secret
+- kind: change
+- logged: v0.3.0 · 2026-11-26
+
+The owner ruled that formadaptor holds no secret. Proposing moves to formcompiler's `adaptor.yml`, which holds formcompiler's release App. formcompiler's rule is that a job holding its release credential never runs another repository's code, and a target's generator is exactly that, so `run` is split in two. `run` stays, for a local dry run and for anything that still calls it.
+
+`plan` does what `run` does up to `plan(...)` and writes the result into a new, empty folder: `proposal.json` (format `formadaptor-plan`, version 1) and `files/<path>`, a byte copy of each changed file that still exists. The proposal dict now carries `change_hash`, the full digest the branch name is cut from, so `apply` can compare without running anything. In the plan file the changed paths are `paths` and `files` is the list of `{path, sha256}` or `{path, deleted: true}`. `base` is the checkout's HEAD before the generator ran; a generator that moves HEAD is refused. A file the generator leaves as a link, or a path that goes through a link in the checkout, is refused rather than copied. It writes `changed=true|false`; nothing to propose writes no plan.
+
+`changed --plans DIR` lists, as `matrix` does, the enabled targets that have a `plan-<name>/proposal.json` naming that target. Anything else is skipped with a `::warning::` on stderr, never a failure, and a missing or empty folder is `[]`.
+
+`apply` trusts nothing in the plan, because the job that wrote it ran the target's code. Before it touches the checkout it checks: format and version; target and repository against targets.json; base a 40-hex sha and change hash a 64-hex sha; the branch is the target's `branch_prefix` and the first 10 characters of that hash (stricter than "starts with the prefix", and it is what `plan` writes); every path relative, without `..`, `.` or empty parts, backslash or control character, and `allowed` by the target's files; `paths` exactly the sorted listed files; every entry under `files/` a plain file that is listed and matches its sha256, no link anywhere, and every listed copy present. Title and body are passed on as text, cut at 200 and 60,000 characters. Untrusted values in error lines are quoted with `repr`, so a name with a newline cannot start a workflow command; the plan's warning reaches the summary with control characters replaced and is not printed as `::warning::` (the plan job already did that).
+
+If the checkout's HEAD is not the plan's base, `apply` writes one summary line, `proposed=false`, exits 0 and pushes nothing. Otherwise it refuses a dirty checkout or a path that goes through a link in the checkout, copies and deletes, and refuses unless `git status` names exactly the plan's paths and `change_hash` over them equals the plan's. Then `propose(...)` as `run` calls it, with the same summary lines and `proposed` output. It runs no generator and nothing from the checkout.
+
+hourly.yml loses its `propose` job and propose.yml is gone; the workflow test that read propose.yml's App token now checks that no workflow here names a secret.
+
+Rehearsed 2026-11-26 in a scratch folder with a local bare repository as the target, `FORMADAPTOR_GIT_BASE` pointing at it and a local stand-in for the API: plan wrote two files and `changed=true`; changed listed the one good plan and warned on four bad entries; apply refused a path outside the target's files, a wrong sha256, a link in the plan, another repository, a `..` path and a branch outside the prefix, each before touching the checkout; the real apply pushed `bot/formadaptor-b61b29ee1d` as nodemode-ai and opened the stand-in pull request; after main moved it wrote the one line and `proposed=false`. The suite: 82 passed.
 
 ### ids.json · rows 36 and 37, FormCraft and FormRig
 - refers-to: spec/ids.json; tests/test_sources.py :: test_ids_file_pairs_every_registry_entry_once

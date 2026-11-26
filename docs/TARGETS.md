@@ -28,8 +28,8 @@ formadaptor also watches the first rule. Before the generator writes, it reads t
 
 | Field | Meaning |
 | --- | --- |
-| `name` | Short name, used in the workflow and in `propose.yml`'s `target` input. |
-| `repository` | `nodemode-dev/<repo>`. The App token is minted for this one repository. |
+| `name` | Short name, used in formcompiler's `adaptor.yml` matrix and in each plan's folder name, `plan-<name>`. |
+| `repository` | `nodemode-dev/<repo>`. formcompiler's release App mints its token for this one repository, and `apply` refuses a plan that names another. |
 | `enabled` | `false` skips the target. |
 | `command` | The generator as an argument list (no shell), for example `["python3", "-I", "setup/family.py"]`. `--family <path>` and `--check` are appended. |
 | `files` | The paths the generator may change, the copy of the spec included; a path ending in `/` allows any file under it. |
@@ -51,6 +51,6 @@ When the first rule of the contract was written, formMCP, formskills and form.ex
 
 formtray is not a target: its bundled app list is the owner's dated release schedule, kept by hand, because it carries release dates for apps that are not public yet.
 
-A target that cannot be reached (not created yet, no `main`, or the App not installed on it) is a skip in propose.yml: one line in the run summary, and the other targets go on.
+Proposing runs in formcompiler's `adaptor.yml`, in two jobs per target. `propose.py plan` runs the generator in a job with no secret and writes `proposal.json` and a copy of each changed file; `propose.py changed` lists the targets that have a plan; `propose.py apply` holds the token, runs nothing from the target, re-checks every planned file and opens the pull request. When the target's `main` has moved since the plan, apply pushes nothing and the next run proposes again. Whether a target that cannot be reached (not created yet, no `main`, or the App not installed on it) is a skip is up to that workflow.
 
 formportal, formai.studio and formcompiler's README are listed in the design as later targets; they are not in targets.json yet.

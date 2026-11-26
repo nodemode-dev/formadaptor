@@ -8,7 +8,7 @@ Use **Report a vulnerability** on this repository's Security tab (GitHub's priva
 
 ## What formadaptor holds
 
-- A GitHub App's client ID and private key (`FORMADAPTOR_APP_ID`, `FORMADAPTOR_APP_PRIVATE_KEY`). Each run mints a token for one target repository at a time, with Contents and Pull requests write only.
+- No secret and no App key. Pull requests in the targets are opened by formcompiler's `adaptor.yml` with formcompiler's release App, which mints a token for one target repository at a time; the scripts it runs are this repository's `scripts/propose.py plan`, `changed` and `apply`.
 - The built-in workflow token, which writes only this repository's `spec` branch.
 
 ## In scope
@@ -16,9 +16,9 @@ Use **Report a vulnerability** on this repository's Security tab (GitHub's priva
 | Threat | What stops it |
 |---|---|
 | An outside pull request runs code in CI | Pull requests run only `self-check.yml`: no secret, a read-only token, `persist-credentials: false`. |
-| A fork runs the hourly or propose workflows | Every job that publishes or proposes is guarded by `github.repository == 'nodemode-dev/formadaptor'` on `main` (tested in `tests/test_workflows.py`). |
+| A fork runs the hourly workflow | Every job that publishes is guarded by `github.repository == 'nodemode-dev/formadaptor'` on `main` (tested in `tests/test_workflows.py`). |
 | A private app reaches a public file | A private repository's app is an id with `public: false`; nothing else about it is read or written. |
-| A target's generator misuses the token | The generator runs with a minimal environment and no token; the checkout keeps no credential; a change outside the target's declared files is refused. |
+| A target's generator misuses the token | The generator runs with `plan`, in a job with no secret and no environment, with a minimal environment and no token; a change outside the target's declared files is refused. The job that holds the token runs `apply`: it runs no target code and re-checks every planned file (its path against the target's files, its sha256, no link, the repository, the branch, the base commit and the change hash) before anything is pushed. |
 | A change reaches a target's main unreviewed | formadaptor only opens pull requests from `bot/formadaptor-*` branches; a person merges them. |
 | A compromised action | Actions are pinned to full commit SHAs. |
 

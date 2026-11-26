@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.0 · 2026-11-26
+
+- formadaptor holds no secret. Proposing moves to formcompiler's `adaptor.yml`, with formcompiler's release App from its `release` environment; hourly.yml now builds and publishes the spec only, and propose.yml is gone.
+- `scripts/propose.py plan` runs a target's generator as `run` does, needs no token, and writes `proposal.json` (format `formadaptor-plan`, version 1) with a byte copy of each changed file and its sha256; nothing to propose writes nothing. `changed --plans DIR` lists the enabled targets with a plan, as `matrix` does, and skips a malformed one with a warning. `apply` needs the token, runs no target code, re-checks every planned file (paths against the target's files, sha256, no link, repository, branch, base commit and change hash), and opens the pull request as `run` did; when the target's `main` has moved since the plan it pushes nothing and the next run proposes again.
+- docs/OWNER_SETUP.md steps 3 and 4: no App and no secret here; formcompiler's release App needs "Pull requests: read and write" beside Contents and an installation on each target.
+- 82 tests in 5 files.
+
 ## v0.2.3 · 2026-11-25
 
 - `spec/ids.json` gains FormCraft (`nodemode-dev/formcraft`, catalogue and site id `formcraft`) and FormRig (`nodemode-dev/formrig`, catalogue and site id `formrig`), rows 36 and 37. formcompiler's `main` registers both, and `ids --check` compares every registry entry, so the `lint` job failed on the two names and the hourly build would have stopped on them. The file now pairs all 37 registry entries.

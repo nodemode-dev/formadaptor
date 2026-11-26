@@ -21,6 +21,12 @@ FILE = re.compile(r"^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*/?$")
 APP_CHECKOUTS = re.compile(r"^\.\./(?!\.{1,2}$)[A-Za-z0-9._-]+$")
 APP_REPO = re.compile(r"^[A-Za-z0-9._-]+$")
 APP_TAG = re.compile(r"^v\d+\.\d+\.\d+$")
+CONTROL = re.compile(r"[\x00-\x1f\x7f-\x9f]")
+HEX40 = re.compile(r"^[0-9a-f]{40}$")
+HEX64 = re.compile(r"^[0-9a-f]{64}$")
+PLAN_FORMAT = "formadaptor-plan"
+TITLE_LIMIT = 200
+BODY_LIMIT = 60000
 BASE = "main"
 IDENTITY = ("nodemode-ai", "mackin@nodemode.ai")
 GENERATOR_TIMEOUT = 600
@@ -236,6 +242,7 @@ def plan(target, checkout, family, previous=None):
         "target": target["name"],
         "repository": target["repository"],
         "branch": f"{target['branch_prefix']}{digest[:10]}",
+        "change_hash": digest,
         "files": paths,
         "title": spec.title(previous_doc, family_doc),
         "body": body_of(target, family_doc, previous_doc, paths),
@@ -280,6 +287,240 @@ def propose(gh, checkout, target, proposal, token):
     return pull, closed
 
 
+def sha256_of(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def head(checkout):
+    return git(checkout, "rev-parse", "--verify", "HEAD^{commit}").strip()
+
+
+def plain_path(path, files):
+    return (isinstance(path, str) and 0 < len(path) <= 1024 and not path.startswith("/") and "\\" not in path and not CONTROL.search(path)
+            and all(part not in ("", ".", "..") for part in path.split("/")) and allowed(path, files))
+
+
+def write_plan(target, checkout, proposal, base, out):
+    out = Path(out)
+    if out.is_symlink() or (out.exists() and (not out.is_dir() or any(out.iterdir()))):
+        raise ProposeError(f"{target['name']}: {out} is not a new, empty folder for the plan")
+    entries = []
+    for path in proposal["files"]:
+        source = Path(checkout) / path
+        if not inside(checkout, path):
+            raise ProposeError(f"{target['name']}: the generator left {path!r} as a link; only plain files are proposed")
+        if source.is_file():
+            copy = out / "files" / path
+            copy.parent.mkdir(parents=True, exist_ok=True)
+            copy.write_bytes(source.read_bytes())
+            entries.append({"path": path, "sha256": sha256_of(copy)})
+        elif source.exists():
+            raise ProposeError(f"{target['name']}: {path!r} is not a plain file")
+        else:
+            entries.append({"path": path, "deleted": True})
+    doc = {
+        "format": PLAN_FORMAT, "format_version": 1, "target": target["name"], "repository": target["repository"], "base": base,
+        "branch": proposal["branch"], "change_hash": proposal["change_hash"], "paths": proposal["files"],
+        "title": proposal["title"], "body": proposal["body"], "warning": proposal["warning"], "files": entries,
+    }
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "proposal.json").write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return doc
+
+
+def read_plan_doc(plandir):
+    plandir = Path(plandir)
+    if plandir.is_symlink() or not plandir.is_dir():
+        raise ProposeError(f"{str(plandir)!r} is not a plan folder")
+    doc_path = plandir / "proposal.json"
+    if doc_path.is_symlink() or not doc_path.is_file():
+        raise ProposeError(f"{str(plandir)!r} holds no plain proposal.json")
+    try:
+        doc = json.loads(doc_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ProposeError(f"proposal.json does not load: {str(error)[:200]!r}") from None
+    if not isinstance(doc, dict) or doc.get("format") != PLAN_FORMAT or doc.get("format_version") != 1:
+        raise ProposeError(f"proposal.json is not a {PLAN_FORMAT} version 1 file")
+    return doc
+
+
+def checked_plan(target, plandir):
+    plandir = Path(plandir)
+    doc = read_plan_doc(plandir)
+    name = target["name"]
+    if doc.get("target") != name:
+        raise ProposeError(f"{name}: the plan names the target {str(doc.get('target'))[:60]!r}")
+    if doc.get("repository") != target["repository"]:
+        raise ProposeError(f"{name}: the plan names the repository {str(doc.get('repository'))[:100]!r}, not {target['repository']}")
+    base, digest, branch = doc.get("base"), doc.get("change_hash"), doc.get("branch")
+    if not (isinstance(base, str) and HEX40.match(base)):
+        raise ProposeError(f"{name}: the plan's base is not a commit sha")
+    if not (isinstance(digest, str) and HEX64.match(digest)):
+        raise ProposeError(f"{name}: the plan's change hash is not a sha256")
+    if not (isinstance(branch, str) and branch.startswith(target["branch_prefix"]) and branch == f"{target['branch_prefix']}{digest[:10]}"):
+        raise ProposeError(f"{name}: the plan's branch {str(branch)[:100]!r} is not {target['branch_prefix']} and its change hash")
+    title, body, warning = doc.get("title"), doc.get("body"), doc.get("warning")
+    if not isinstance(title, str) or not title.strip() or not isinstance(body, str) or not (warning is None or isinstance(warning, str)):
+        raise ProposeError(f"{name}: the plan's title, body or warning is not text")
+    paths, entries = doc.get("paths"), doc.get("files")
+    if not isinstance(paths, list) or not paths or not isinstance(entries, list) or len(entries) != len(paths):
+        raise ProposeError(f"{name}: the plan lists no files, or its paths and files differ")
+    copied, deleted = {}, set()
+    for entry in entries:
+        path = entry.get("path") if isinstance(entry, dict) else None
+        if not plain_path(path, target["files"]):
+            raise ProposeError(f"{name}: the plan names {str(path)[:200]!r}, which is not one of the target's files")
+        if path in copied or path in deleted:
+            raise ProposeError(f"{name}: the plan names {path!r} twice")
+        if set(entry) == {"path", "deleted"} and entry["deleted"] is True:
+            deleted.add(path)
+        elif set(entry) == {"path", "sha256"} and isinstance(entry["sha256"], str) and HEX64.match(entry["sha256"]):
+            copied[path] = entry["sha256"]
+        else:
+            raise ProposeError(f"{name}: the plan's entry for {path!r} is neither a copied file with its sha256 nor a deletion")
+    if paths != sorted(set(copied) | deleted) or not all(isinstance(p, str) for p in paths):
+        raise ProposeError(f"{name}: the plan's paths are not exactly its files, in order")
+    root = plandir / "files"
+    found = set()
+    if root.is_symlink() or (root.exists() and not root.is_dir()):
+        raise ProposeError(f"{name}: the plan's files folder is a link or not a folder")
+    for folder, dirs, names in os.walk(root, followlinks=False):
+        for entry in dirs + names:
+            full = Path(folder) / entry
+            rel = full.relative_to(root).as_posix()
+            if full.is_symlink():
+                raise ProposeError(f"{name}: the plan holds a link, {rel[:200]!r}")
+            if full.is_dir():
+                continue
+            if not full.is_file() or rel not in copied:
+                raise ProposeError(f"{name}: the plan holds {rel[:200]!r}, which it does not list as a copied file")
+            if sha256_of(full) != copied[rel]:
+                raise ProposeError(f"{name}: {rel!r} in the plan does not match its listed sha256")
+            found.add(rel)
+    if found != set(copied):
+        raise ProposeError(f"{name}: the plan lists {', '.join(sorted(set(copied) - found))[:300]!r} but does not hold them")
+    return {
+        "base": base,
+        "plandir": plandir,
+        "deleted": sorted(deleted),
+        "proposal": {"warning": warning, "target": name, "repository": target["repository"], "branch": branch, "change_hash": digest,
+                     "files": paths, "title": title[:TITLE_LIMIT], "body": body[:BODY_LIMIT]},
+    }
+
+
+def inside(checkout, path):
+    root = Path(checkout).resolve()
+    current = root
+    for part in path.split("/"):
+        current = current / part
+        if current.is_symlink():
+            return False
+    return root in (root / path).resolve().parents
+
+
+def apply_plan(target, checkout, checked):
+    checkout = Path(checkout)
+    for path in checked["proposal"]["files"]:
+        if not inside(checkout, path):
+            raise ProposeError(f"{target['name']}: {path!r} would be written through a link in the checkout")
+    for path in checked["proposal"]["files"]:
+        full = checkout / path
+        if path in checked["deleted"]:
+            if full.is_file():
+                full.unlink()
+            elif full.exists():
+                raise ProposeError(f"{target['name']}: {path!r} is not a plain file in the checkout")
+        else:
+            if full.exists() and not full.is_file():
+                raise ProposeError(f"{target['name']}: {path!r} is not a plain file in the checkout")
+            full.parent.mkdir(parents=True, exist_ok=True)
+            full.write_bytes((checked["plandir"] / "files" / path).read_bytes())
+
+
+def changed_plans(plans, targets):
+    enabled = {t["name"]: t for t in targets if t["enabled"]}
+    rows = []
+    root = Path(plans)
+    if not root.is_dir():
+        return rows
+    for folder in sorted(root.iterdir()):
+        label = repr(folder.name[:80])
+        if folder.is_symlink() or not folder.is_dir() or not folder.name.startswith("plan-"):
+            print(f"::warning::{label} is not a plan folder, skipped", file=sys.stderr)
+            continue
+        name = folder.name[len("plan-"):]
+        if name not in enabled:
+            print(f"::warning::{label} names no enabled target, skipped", file=sys.stderr)
+            continue
+        try:
+            doc = read_plan_doc(folder)
+        except ProposeError as error:
+            print(f"::warning::{label}: {error}, skipped", file=sys.stderr)
+            continue
+        if doc.get("target") != name:
+            print(f"::warning::{label}: its proposal.json names another target, skipped", file=sys.stderr)
+            continue
+        target = enabled[name]
+        rows.append({"name": name, "repository": target["repository"], "repo": target["repository"].split("/", 1)[1]})
+    return rows
+
+
+def plan_command(target, args):
+    if not target["enabled"]:
+        print(f"{target['name']}: disabled in targets.json, nothing to do")
+        output("changed", "false")
+        return 0
+    checkout = Path(args.checkout)
+    base = head(checkout)
+    proposal = plan(target, checkout, args.family, args.previous)
+    if proposal is None:
+        summary(f"{target['name']}: in step with the family spec, nothing to propose\n")
+        output("changed", "false")
+        return 0
+    if head(checkout) != base:
+        raise ProposeError(f"{target['name']}: the generator moved the checkout's HEAD")
+    if proposal["warning"]:
+        print(f"::warning::{proposal['warning']}")
+        summary(f"Warning: {proposal['warning']}. The proposal is not held back.\n")
+    doc = write_plan(target, checkout, proposal, base, args.out)
+    print(f"{target['name']}: planned {proposal['branch']} on {base[:10]}, {len(doc['files'])} files")
+    output("changed", "true")
+    return 0
+
+
+def apply_command(target, args):
+    if not target["enabled"]:
+        print(f"{target['name']}: disabled in targets.json, nothing to do")
+        output("proposed", "false")
+        return 0
+    token = os.environ.get("FORMADAPTOR_TARGET_TOKEN", "").strip()
+    if not token:
+        raise ProposeError("FORMADAPTOR_TARGET_TOKEN is not set")
+    checked = checked_plan(target, args.plan)
+    proposal = checked["proposal"]
+    checkout = Path(args.checkout)
+    if head(checkout) != checked["base"]:
+        summary(f"{target['name']}: main moved since the plan was made on {checked['base'][:10]}; nothing is pushed, the next run proposes again\n")
+        output("proposed", "false")
+        return 0
+    if git(checkout, "status", "--porcelain").strip():
+        raise ProposeError(f"{target['name']}: the checkout is not clean before the plan is applied")
+    apply_plan(target, checkout, checked)
+    if changed_files(checkout) != proposal["files"] or change_hash(checkout, proposal["files"]) != proposal["change_hash"]:
+        raise ProposeError(f"{target['name']}: the applied files do not give the plan's change hash")
+    if proposal["warning"]:
+        summary(f"Warning: {CONTROL.sub(' ', proposal['warning'])[:1000]}. The proposal is not held back.\n")
+    pull, closed = propose(GitHub(token=token), checkout, target, proposal, token)
+    if pull is None:
+        summary(f"{target['name']}: {proposal['branch']} is already open, nothing new to propose\n")
+        output("proposed", "false")
+        return 0
+    summary(f"{target['name']}: opened {pull.get('html_url', '#' + str(pull['number']))} from {proposal['branch']}"
+            + (f", closed {', '.join('#' + str(n) for n in closed)} as superseded" if closed else "") + "\n")
+    output("proposed", "true")
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description="run a target's generator against the family spec and propose the difference")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -296,6 +537,21 @@ def main():
     apps.add_argument("--checkout", required=True, help="the checkout of the target repository the generator will run in")
     apps.add_argument("--family", required=True)
     apps.add_argument("--targets", default=str(TARGETS))
+    planned = sub.add_parser("plan", help="run the target's generator and write what it would propose into a plan folder; no token")
+    planned.add_argument("--target", required=True)
+    planned.add_argument("--checkout", required=True, help="a clean checkout of the target repository at main")
+    planned.add_argument("--family", required=True)
+    planned.add_argument("--previous", help="the spec before this one, for the title")
+    planned.add_argument("--out", required=True, help="a new folder for proposal.json and files/")
+    planned.add_argument("--targets", default=str(TARGETS))
+    found = sub.add_parser("changed", help="the enabled targets that have a plan, as a JSON list for a workflow matrix")
+    found.add_argument("--plans", required=True, help="one plan-<target> folder per plan")
+    found.add_argument("--targets", default=str(TARGETS))
+    applied = sub.add_parser("apply", help="check a plan, copy its files into the checkout and propose them; runs no target code")
+    applied.add_argument("--target", required=True)
+    applied.add_argument("--checkout", required=True, help="a clean checkout of the target repository at main")
+    applied.add_argument("--plan", required=True)
+    applied.add_argument("--targets", default=str(TARGETS))
     args = parser.parse_args()
     try:
         if args.command == "matrix":
@@ -313,7 +569,14 @@ def main():
             fetched = fetch_apps(target, Path(args.checkout), family_doc)
             print(f"{target['name']}: {len(fetched)} public apps at their released tags in {target['app_checkouts']}")
             return 0
+        if args.command == "changed":
+            print(json.dumps(changed_plans(args.plans, load_targets(args.targets)), separators=(",", ":")))
+            return 0
         target = find(load_targets(args.targets), args.target)
+        if args.command == "plan":
+            return plan_command(target, args)
+        if args.command == "apply":
+            return apply_command(target, args)
         if not target["enabled"]:
             print(f"{target['name']}: disabled in targets.json, nothing to do")
             output("proposed", "false")
