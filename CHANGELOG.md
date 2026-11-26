@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.3.1 · 2026-11-25
+
+- `plan` writes no plan when its branch is already the head of an open pull request in the target, so formcompiler's `adaptor.yml` starts no `propose` job, and asks for no approval, while a proposal waits for a merge.
+- `apply` does not push a branch the target already has, and goes straight to opening the pull request. A run that was refused the pull request no longer blocks the next one.
+- The token reaches git through its environment and is in no argument list.
+- docs/OWNER_SETUP.md step 4 says what the fine-grained token needs when formcompiler's `release` environment holds it instead of the App.
+- 82 tests in 5 files.
+
 ## v0.3.0 · 2026-11-26
 
 - formadaptor holds no secret. Proposing moves to formcompiler's `adaptor.yml`, with formcompiler's release App from its `release` environment; hourly.yml now builds and publishes the spec only, and propose.yml is gone.

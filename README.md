@@ -18,4 +18,4 @@ python3 -I scripts/propose.py changed --plans plans
 python3 -I scripts/advisory.py --family family.json
 ```
 
-Version 0.3.0. Licence: GPL-3.0-only (see LICENSE and NOTICE).
+Version 0.3.1. Licence: GPL-3.0-only (see LICENSE and NOTICE).

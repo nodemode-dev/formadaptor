@@ -2,8 +2,23 @@
 
 Living log of all comment content, explainers, rationale, TODOs and removed code for the adaptor (the scripts and the workflows). The source files stay comment-free per dev-rules `sub-skills/hashout-log/SUB-SKILL.md`; everything they would have said lives here, indexed. Read this first, then edit code surgically.
 
-Current build version: v0.3.0
-Last updated: 2026-11-26 · plan, changed and apply; no secret in this repository (v0.3.0)
+Current build version: v0.3.1
+Last updated: 2026-11-25 · a proposal that is already open starts nothing, a branch already on the target is not pushed again, the token reaches git through its environment (v0.3.1); 2026-11-26 · plan, changed and apply; no secret in this repository (v0.3.0)
+
+### propose.py · an open proposal starts nothing; a pushed branch is not pushed again; the token goes to git through the environment
+- refers-to: scripts/propose.py :: already_open, plan_command, push
+- kind: fix
+- logged: v0.3.1 · 2026-11-25
+
+The first run of formcompiler's `adaptor.yml` (25 November, evening): three plans were made and the three `propose` jobs waited for the owner's approval, because formcompiler's `release` environment has a required reviewer. Every later hour would have asked again for as long as a proposal stayed unmerged, since only `apply` looked for the open pull request.
+
+`plan` now asks GitHub for the target's open pull requests before it writes a plan (`already_open`, through `open_bot_pulls`; the targets are public, so the run's own read-only `GH_TOKEN` or no token at all is enough). When the proposal's branch is already the head of an open pull request, `plan` writes no plan, says which pull request waits for a merge, and sets `changed=false`, so no `propose` job starts. When GitHub cannot be asked, `plan` goes on as before and `apply` makes the same check with the target's token.
+
+`push` asks the target for the branch first (`git ls-remote --heads`) and does not push when it is there. The branch name carries the first 10 characters of the change hash, so a branch of that name holds the same files. Before, a run that pushed the branch and was then refused the pull request (a credential without Pull requests: read and write) left the branch behind, and the next run's push was rejected as not a fast-forward; now the next run finds the branch and goes straight to opening the pull request.
+
+The token reaches git through its environment (`GIT_CONFIG_COUNT`, `GIT_CONFIG_KEY_0`, `GIT_CONFIG_VALUE_0`) so it is in no argument list. `GIT_TERMINAL_PROMPT=0` keeps git from asking for a name when the token is refused.
+
+Rehearsed against a local repository and a local stand-in for the API: `plan` with the branch open as #7 wrote no plan and `changed=false`; `plan` with the API unreachable planned as before; `apply` with the branch already on the target printed "is already on nodemode-dev/formX, not pushed again" and opened the pull request; `apply` against a repository that does not exist stopped with git's own message.
 
 ### propose.py · plan, changed and apply; no secret in this repository
 - refers-to: scripts/propose.py :: plan_command, write_plan, changed_plans, checked_plan, apply_plan, apply_command; .github/workflows/hourly.yml; tests/test_workflows.py :: test_no_workflow_holds_a_secret
