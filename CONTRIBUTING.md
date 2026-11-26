@@ -14,7 +14,7 @@ You need Python 3.11 or newer. The scripts use the standard library only; the te
 
 | Folder | What is there |
 | --- | --- |
-| `.github/workflows` | hourly, propose and self-check |
+| `.github/workflows` | hourly and self-check; proposing is formcompiler's `adaptor.yml`, which runs `propose.py plan`, `changed` and `apply` |
 | `scripts` | github_api, registry, visibility, releases, manifest, spec and propose |
 | `spec` | the id pairs and the two schemas |
 | `docs` | the spec, the target contract and the owner setup |
