@@ -3,7 +3,18 @@
 Living log of all comment content, explainers, rationale, TODOs and removed code for the adaptor (the scripts and the workflows). The source files stay comment-free per dev-rules `sub-skills/hashout-log/SUB-SKILL.md`; everything they would have said lives here, indexed. Read this first, then edit code surgically.
 
 Current build version: v0.2.2
-Last updated: 2026-11-22 · FormSubstrate's and FormSlot's id pairs (v0.2.2)
+Last updated: 2026-11-25 · FormCraft's and FormRig's id pairs (after v0.2.2)
+
+### ids.json · rows 36 and 37, FormCraft and FormRig
+- refers-to: spec/ids.json; tests/test_sources.py :: test_ids_file_pairs_every_registry_entry_once
+- kind: fix
+- logged: after v0.2.2 · 2026-11-25
+
+formcompiler's `main` registers FormRig (`apps/formrig.json`, `nodemode-dev/formrig`, catalogue id `formrig`) and FormCraft (`apps/formcraft.json`, `nodemode-dev/formcraft`, catalogue id `formcraft`), added there in its 0.22.0. `spec/ids.json` had no row for either, and `ids --check` compares every registry entry, so the `lint` job stopped on both names as soon as this repository's 0.2.2 reached `main`, and the hourly build would stop the same way. FormPromo, registered at the same time, already had its row.
+
+Each gets one row, in the file's alphabetical place: FormCraft after FormCel, FormRig after FormRef. App, repository, catalogue id and site id are the same word for both. The test counts 37 rows and 37 different catalogue ids.
+
+Run 2026-11-25 against formcompiler's `main` at its 37 entries: before, `ids --check` named `formcraft` and `formrig` as "in the registry, not in spec/ids.json" and left with 1; after, it reports the 37 entries in step.
 
 ### ids.json · rows 34 and 35, FormSubstrate and FormSlot, both switched off in the registry
 - refers-to: spec/ids.json; tests/test_sources.py :: test_ids_file_pairs_every_registry_entry_once
