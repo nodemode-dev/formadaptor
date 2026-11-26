@@ -1,12 +1,12 @@
 {
   "format": "formai-family",
   "format_version": 1,
-  "generated": "2026-11-23T03:54:56Z",
+  "generated": "2026-11-26T01:56:16Z",
   "source": {
     "repository": "nodemode-dev/formcompiler",
-    "registry_version": "0.21.0"
+    "registry_version": "0.23.0"
   },
-  "content_sha256": "255fcabe23b743596b6611b8b1bc11621cca813011b864ca12d84025c0aad594",
+  "content_sha256": "1f2518f5aadd5dc172d18229fa31b67f485da100073537df6513372939c45f1b",
   "apps": [
     {
       "id": "formai",
@@ -26,10 +26,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "0.71.3",
-        "tag": "v0.71.3",
-        "published": "2026-11-22T08:45:18Z",
-        "url": "https://github.com/nodemode-dev/formportal/releases/tag/v0.71.3",
+        "version": "0.71.8",
+        "tag": "v0.71.8",
+        "published": "2026-11-26T01:48:36Z",
+        "url": "https://github.com/nodemode-dev/formportal/releases/tag/v0.71.8",
         "skills": [
           "formportal-harness",
           "formportal-skillset"
@@ -135,10 +135,10 @@
         "skills": "skills"
       },
       "release": {
-        "version": "0.30.0",
-        "tag": "v0.30.0",
-        "published": "2026-11-23T02:07:56Z",
-        "url": "https://github.com/nodemode-dev/formCAD/releases/tag/v0.30.0",
+        "version": "0.31.0",
+        "tag": "v0.31.0",
+        "published": "2026-11-25T23:18:56Z",
+        "url": "https://github.com/nodemode-dev/formCAD/releases/tag/v0.31.0",
         "skills": [
           "formcad-driving",
           "formcad-harness"
@@ -200,6 +200,10 @@
         },
         "extensions": null
       }
+    },
+    {
+      "id": "formcraft",
+      "public": false
     },
     {
       "id": "formcut",
@@ -419,10 +423,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "0.10.0",
-        "tag": "v0.10.0",
-        "published": "2026-11-21T01:44:13Z",
-        "url": "https://github.com/nodemode-dev/form.ext/releases/tag/v0.10.0",
+        "version": "0.11.0",
+        "tag": "v0.11.0",
+        "published": "2026-11-25T21:09:55Z",
+        "url": "https://github.com/nodemode-dev/form.ext/releases/tag/v0.11.0",
         "skills": [
           "formcut-mcp",
           "formdeck-harness",
@@ -486,10 +490,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "0.30.0",
-        "tag": "v0.30.0",
-        "published": "2026-11-21T17:30:17Z",
-        "url": "https://github.com/nodemode-dev/formfabric/releases/tag/v0.30.0",
+        "version": "0.31.0",
+        "tag": "v0.31.0",
+        "published": "2026-11-25T23:18:57Z",
+        "url": "https://github.com/nodemode-dev/formfabric/releases/tag/v0.31.0",
         "skills": [
           "formfabric-harness",
           "formfabric-modeling"
@@ -683,16 +687,39 @@
         "skills": ""
       },
       "release": {
-        "version": "0.23.3",
-        "tag": "v0.23.3",
-        "published": "2026-11-23T02:07:58Z",
-        "url": "https://github.com/nodemode-dev/formmorpheus/releases/tag/v0.23.3",
+        "version": "0.31.0",
+        "tag": "v0.31.0",
+        "published": "2026-11-25T21:09:56Z",
+        "url": "https://github.com/nodemode-dev/formmorpheus/releases/tag/v0.31.0",
         "skills": []
       }
     },
     {
       "id": "formnet",
-      "public": false
+      "public": true,
+      "app": "formNET",
+      "repo": "formNET",
+      "repository": "nodemode-dev/formNET",
+      "site": "formnet",
+      "name": "FormNET",
+      "kind": "network",
+      "summary": "The network tab for the whole computer: what websites, apps and the machine actually send.",
+      "licence": "Apache-2.0",
+      "state": "prelaunch",
+      "launcher": "formnet",
+      "agents": {
+        "mcp": true,
+        "skills": ".claude/skills"
+      },
+      "release": {
+        "version": "0.10.3",
+        "tag": "v0.10.3",
+        "published": "2026-11-25T20:39:10Z",
+        "url": "https://github.com/nodemode-dev/formNET/releases/tag/v0.10.3",
+        "skills": [
+          "formnet-inspector"
+        ]
+      }
     },
     {
       "id": "formpath",
@@ -830,10 +857,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "0.10.1",
-        "tag": "v0.10.1",
-        "published": "2026-11-23T02:07:57Z",
-        "url": "https://github.com/nodemode-dev/formpublisher/releases/tag/v0.10.1",
+        "version": "0.11.0",
+        "tag": "v0.11.0",
+        "published": "2026-11-25T20:01:02Z",
+        "url": "https://github.com/nodemode-dev/formpublisher/releases/tag/v0.11.0",
         "skills": [
           "formpublisher-harness",
           "formpublisher-skillset"
@@ -897,6 +924,10 @@
         },
         "extensions": null
       }
+    },
+    {
+      "id": "formrig",
+      "public": false
     },
     {
       "id": "formsculpt",
@@ -1037,6 +1068,62 @@
       }
     },
     {
+      "id": "formslot",
+      "public": true,
+      "app": "formslot",
+      "repo": "formslot",
+      "repository": "nodemode-dev/formslot",
+      "site": "formslot",
+      "name": "FormSlot",
+      "kind": "memory",
+      "summary": "Codebase memory for coding agents: what is built, where it lives and the rules it follows.",
+      "licence": "GPL-3.0-only",
+      "state": "prelaunch",
+      "launcher": "formslot",
+      "agents": {
+        "mcp": true,
+        "skills": "plugin/formslot/skills"
+      },
+      "release": {
+        "version": "0.18.3",
+        "tag": "v0.18.3",
+        "published": "2026-11-25T20:39:12Z",
+        "url": "https://github.com/nodemode-dev/formslot/releases/tag/v0.18.3",
+        "skills": [
+          "formslot-curation",
+          "formslot-lookup"
+        ]
+      }
+    },
+    {
+      "id": "formsubstrate",
+      "public": true,
+      "app": "formsubstrate",
+      "repo": "formsubstrate",
+      "repository": "nodemode-dev/formsubstrate",
+      "site": "formsubstrate",
+      "name": "FormSubstrate",
+      "kind": "workbench",
+      "summary": "A code and text editor that runs Claude Code agents, each in its own git worktree.",
+      "licence": "GPL-3.0-only",
+      "state": "prelaunch",
+      "launcher": "formsubstrate",
+      "agents": {
+        "mcp": true,
+        "skills": ".claude/skills"
+      },
+      "release": {
+        "version": "0.25.4",
+        "tag": "v0.25.4",
+        "published": "2026-11-25T22:29:23Z",
+        "url": "https://github.com/nodemode-dev/formsubstrate/releases/tag/v0.25.4",
+        "skills": [
+          "formsubstrate-harness",
+          "formsubstrate-use"
+        ]
+      }
+    },
+    {
       "id": "formsurface",
       "public": true,
       "app": "formsurface",
@@ -1082,10 +1169,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "0.13.0",
-        "tag": "v0.13.0",
-        "published": "2026-11-21T01:44:00Z",
-        "url": "https://github.com/nodemode-dev/formtools/releases/tag/v0.13.0",
+        "version": "0.14.0",
+        "tag": "v0.14.0",
+        "published": "2026-11-25T20:06:24Z",
+        "url": "https://github.com/nodemode-dev/formtools/releases/tag/v0.14.0",
         "skills": [
           "formtools-driving",
           "formtools-harness"
@@ -1138,10 +1225,10 @@
         "skills": ""
       },
       "release": {
-        "version": "0.17.2",
-        "tag": "v0.17.2",
-        "published": "2026-11-22T08:45:17Z",
-        "url": "https://github.com/nodemode-dev/formtray/releases/tag/v0.17.2",
+        "version": "0.18.0",
+        "tag": "v0.18.0",
+        "published": "2026-11-25T20:06:28Z",
+        "url": "https://github.com/nodemode-dev/formtray/releases/tag/v0.18.0",
         "skills": []
       }
     },
@@ -1395,10 +1482,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "0.28.0",
-        "tag": "v0.28.0",
-        "published": "2026-11-23T02:08:00Z",
-        "url": "https://github.com/nodemode-dev/formweb/releases/tag/v0.28.0",
+        "version": "0.31.2",
+        "tag": "v0.31.2",
+        "published": "2026-11-25T21:09:51Z",
+        "url": "https://github.com/nodemode-dev/formweb/releases/tag/v0.31.2",
         "skills": [
           "formweb-editing",
           "formweb-harness",
@@ -1407,7 +1494,7 @@
       },
       "manifest": {
         "mcp": {
-          "tools": 103,
+          "tools": 104,
           "read_only": 37,
           "approval_gated": 1,
           "transports": [
