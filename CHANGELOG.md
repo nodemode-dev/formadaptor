@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.3 · 2026-11-25
+
+- `spec/ids.json` gains FormCraft (`nodemode-dev/formcraft`, catalogue and site id `formcraft`) and FormRig (`nodemode-dev/formrig`, catalogue and site id `formrig`), rows 36 and 37. formcompiler's `main` registers both, and `ids --check` compares every registry entry, so the `lint` job failed on the two names and the hourly build would have stopped on them. The file now pairs all 37 registry entries.
+
 ## v0.2.2 · 2026-11-22
 
 - `spec/ids.json` gains FormSubstrate (`nodemode-dev/formsubstrate`, catalogue and site id `formsubstrate`) and FormSlot (`nodemode-dev/formslot`, catalogue and site id `formslot`), rows 34 and 35. formcompiler 0.22.0 registers both, switched off, and `ids --check` compares every registry entry, so the hourly build would stop without them. Neither enters `family.json` while it is switched off. Merge formcompiler 0.22.0 first and this right after.
