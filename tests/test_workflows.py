@@ -81,4 +81,4 @@ def test_every_version_site_agrees():
         match = re.search(pattern, (REPO / name).read_text(encoding="utf-8"), re.M)
         assert match, name
         found[name] = match.group(1)
-    assert set(found.values()) == {"0.2.3"}, found
+    assert set(found.values()) == {"0.3.0"}, found

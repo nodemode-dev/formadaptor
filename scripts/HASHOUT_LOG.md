@@ -2,8 +2,8 @@
 
 Living log of all comment content, explainers, rationale, TODOs and removed code for the adaptor (the scripts and the workflows). The source files stay comment-free per dev-rules `sub-skills/hashout-log/SUB-SKILL.md`; everything they would have said lives here, indexed. Read this first, then edit code surgically.
 
-Current build version: v0.2.3
-Last updated: 2026-11-25 · FormCraft's and FormRig's id pairs (v0.2.3)
+Current build version: v0.3.0
+Last updated: 2026-11-26 · plan, changed and apply; no secret in this repository (v0.3.0)
 
 ### propose.py · plan, changed and apply; no secret in this repository
 - refers-to: scripts/propose.py :: plan_command, write_plan, changed_plans, checked_plan, apply_plan, apply_command; .github/workflows/hourly.yml; tests/test_workflows.py :: test_no_workflow_holds_a_secret
