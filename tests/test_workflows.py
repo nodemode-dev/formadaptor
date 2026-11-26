@@ -49,7 +49,7 @@ def test_scripts_run_isolated(path):
             pytest.fail(line)
 
 
-@pytest.mark.parametrize("name", ["hourly.yml", "propose.yml"])
+@pytest.mark.parametrize("name", ["hourly.yml"])
 def test_every_job_that_publishes_or_proposes_is_guarded(name):
     for job, body in jobs((REPO / ".github" / "workflows" / name).read_text()).items():
         assert GUARD in body and "github.ref == 'refs/heads/main'" in body, f"{name}: {job}"
@@ -67,22 +67,12 @@ def test_the_hourly_run_is_at_minute_33():
     assert 'cron: "33 * * * *"' in (REPO / ".github" / "workflows" / "hourly.yml").read_text()
 
 
-def test_the_app_token_is_for_one_repository():
-    text = (REPO / ".github" / "workflows" / "propose.yml").read_text()
-    assert "repositories: ${{ matrix.repo }}" in text
-    assert "client-id: ${{ secrets.FORMADAPTOR_APP_ID }}" in text and "private-key: ${{ secrets.FORMADAPTOR_APP_PRIVATE_KEY }}" in text
-    assert text.count("persist-credentials: false") == text.count("actions/checkout@")
-
-
-def test_a_target_that_cannot_be_reached_is_a_skip_and_its_apps_are_fetched_first():
-    steps = (REPO / ".github" / "workflows" / "propose.yml").read_text().split("\n      - ")
-    token = next(s for s in steps if "id: app-token" in s)
-    fetch = next(s for s in steps if "propose.py checkouts" in s)
-    run = next(s for s in steps if "propose.py run" in s)
-    assert "continue-on-error: true" in token
-    assert "is not reachable" in next(s for s in steps if "id: reach" in s)
-    assert all("if: steps.reach.outputs.ok == 'true'" in s for s in (fetch, run))
-    assert steps.index(fetch) < steps.index(run) and "FORMADAPTOR_TARGET_TOKEN" not in fetch
+def test_no_workflow_holds_a_secret():
+    assert [p.name for p in WORKFLOWS] == ["hourly.yml", "self-check.yml"]
+    for path in WORKFLOWS:
+        text = path.read_text()
+        assert "secrets." not in text and "FORMADAPTOR_APP" not in text, path.name
+        assert text.count("persist-credentials: false") == text.count("actions/checkout@"), path.name
 
 
 def test_every_version_site_agrees():
