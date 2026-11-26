@@ -255,6 +255,14 @@ def open_bot_pulls(gh, target):
             and ((p.get("head") or {}).get("repo") or {}).get("full_name", "").lower() == target["repository"].lower()]
 
 
+def already_open(target, branch):
+    try:
+        pulls = open_bot_pulls(GitHub(), target)
+    except (ApiError, ValueError, KeyError, TypeError):
+        return None
+    return next((p.get("number") for p in pulls if (p.get("head") or {}).get("ref") == branch), None)
+
+
 def push(checkout, target, proposal, token):
     env = dict(os.environ, GIT_AUTHOR_NAME=IDENTITY[0], GIT_AUTHOR_EMAIL=IDENTITY[1], GIT_COMMITTER_NAME=IDENTITY[0], GIT_COMMITTER_EMAIL=IDENTITY[1])
     git(checkout, "checkout", "-q", "-b", proposal["branch"])
@@ -263,7 +271,11 @@ def push(checkout, target, proposal, token):
     basic = base64.b64encode(f"x-access-token:{token}".encode("utf-8")).decode("ascii")
     base = os.environ.get("FORMADAPTOR_GIT_BASE", "https://github.com").rstrip("/")
     url = f"{base}/{target['repository']}.git"
-    git(checkout, "-c", f"http.{base}/.extraheader=AUTHORIZATION: basic {basic}", "push", "-q", url, f"HEAD:refs/heads/{proposal['branch']}")
+    signed = dict(os.environ, GIT_TERMINAL_PROMPT="0", GIT_CONFIG_COUNT="1", GIT_CONFIG_KEY_0=f"http.{base}/.extraheader", GIT_CONFIG_VALUE_0=f"AUTHORIZATION: basic {basic}")
+    if git(checkout, "ls-remote", "--heads", url, proposal["branch"], env=signed).strip():
+        print(f"{target['name']}: {proposal['branch']} is already on {target['repository']}, not pushed again")
+        return
+    git(checkout, "push", "-q", url, f"HEAD:refs/heads/{proposal['branch']}", env=signed)
 
 
 def propose(gh, checkout, target, proposal, token):
@@ -482,6 +494,11 @@ def plan_command(target, args):
     if proposal["warning"]:
         print(f"::warning::{proposal['warning']}")
         summary(f"Warning: {proposal['warning']}. The proposal is not held back.\n")
+    waiting = already_open(target, proposal["branch"])
+    if waiting is not None:
+        summary(f"{target['name']}: {proposal['branch']} is already proposed in #{waiting} and waits for a merge; nothing new to propose\n")
+        output("changed", "false")
+        return 0
     doc = write_plan(target, checkout, proposal, base, args.out)
     print(f"{target['name']}: planned {proposal['branch']} on {base[:10]}, {len(doc['files'])} files")
     output("changed", "true")
