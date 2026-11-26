@@ -2,8 +2,8 @@
 
 Living log of all comment content, explainers, rationale, TODOs and removed code for the adaptor (the scripts and the workflows). The source files stay comment-free per dev-rules `sub-skills/hashout-log/SUB-SKILL.md`; everything they would have said lives here, indexed. Read this first, then edit code surgically.
 
-Current build version: v0.2.2
-Last updated: 2026-11-25 · FormCraft's and FormRig's id pairs (after v0.2.2)
+Current build version: v0.2.3
+Last updated: 2026-11-25 · FormCraft's and FormRig's id pairs (v0.2.3)
 
 ### ids.json · rows 36 and 37, FormCraft and FormRig
 - refers-to: spec/ids.json; tests/test_sources.py :: test_ids_file_pairs_every_registry_entry_once
