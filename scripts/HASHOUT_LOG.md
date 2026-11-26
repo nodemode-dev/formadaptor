@@ -2,8 +2,19 @@
 
 Living log of all comment content, explainers, rationale, TODOs and removed code for the adaptor (the scripts and the workflows). The source files stay comment-free per dev-rules `sub-skills/hashout-log/SUB-SKILL.md`; everything they would have said lives here, indexed. Read this first, then edit code surgically.
 
-Current build version: v0.2.1
-Last updated: 2026-11-22 · FormMorpheus's id pair; nothing named SubForm (v0.2.1)
+Current build version: v0.2.2
+Last updated: 2026-11-22 · FormSubstrate's and FormSlot's id pairs (v0.2.2)
+
+### ids.json · rows 34 and 35, FormSubstrate and FormSlot, both switched off in the registry
+- refers-to: spec/ids.json; tests/test_sources.py :: test_ids_file_pairs_every_registry_entry_once
+- kind: change
+- logged: v0.2.2 · 2026-11-22
+
+formcompiler 0.22.0 (branch `feat/register-substrate-slot`) registers two entries, both with `enabled: false`: `apps/formsubstrate.json` (`nodemode-dev/formsubstrate`, catalogue id `formsubstrate`) and `apps/formslot.json` (`nodemode-dev/formslot`, catalogue id `formslot`). `ids --check` compares every registry entry, enabled or not, so once that branch is merged the hourly build stops unless this file has both rows. Each row follows the rule the other rows follow: `app` is the registry's `app`, `repo` the repository's name, `catalog` the registry's `catalog.id`, and `site` the catalogue id. A disabled entry still has its row here (formpublisher's is one), and the spec still leaves it out until it is switched on, so neither app appears in `family.json` yet. When one is switched on and its repository is still private, the spec carries only its id with `public: false`.
+
+The order of the merges matters as it did for FormMorpheus: formcompiler 0.22.0 first, then this right after. Until both are merged, the hourly build stops and the published spec stays as it was.
+
+Run 2026-11-22: `registry.py ids --check` against the formcompiler checkout on `feat/register-substrate-slot` gave "35 registry entries, in step". Against an extract of formcompiler's `origin/main` it named `formslot` and `formsubstrate` as "in spec/ids.json, not in the registry" (rc 1), as expected until that merge. The suite: 87 passed.
 
 ### ids.json · the 33rd row, FormMorpheus; no SubForm to rename
 - refers-to: spec/ids.json; tests/test_sources.py :: test_ids_file_pairs_every_registry_entry_once

@@ -27,6 +27,8 @@
     {"app": "formref", "repo": "formref", "catalog": "formref", "site": "formref"},
     {"app": "formsculpt", "repo": "formsculpt", "catalog": "formsculpt", "site": "formsculpt"},
     {"app": "formskills", "repo": "formskills", "catalog": "formskills", "site": "formskills"},
+    {"app": "formslot", "repo": "formslot", "catalog": "formslot", "site": "formslot"},
+    {"app": "formsubstrate", "repo": "formsubstrate", "catalog": "formsubstrate", "site": "formsubstrate"},
     {"app": "formsurface", "repo": "formsurface", "catalog": "formsurface", "site": "formsurface"},
     {"app": "formtools", "repo": "formtools", "catalog": "formtools", "site": "formtools"},
     {"app": "formtray", "repo": "formtray", "catalog": "formtray", "site": "formtray"},
