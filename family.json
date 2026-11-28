@@ -1,12 +1,12 @@
 {
   "format": "formai-family",
   "format_version": 1,
-  "generated": "2026-11-28T04:07:05Z",
+  "generated": "2026-11-28T13:28:02Z",
   "source": {
     "repository": "nodemode-dev/formcompiler",
     "registry_version": "0.25.1"
   },
-  "content_sha256": "b8547c14286922c6206d946646f2afd87af80f4321ec44591ca3cea667b838ad",
+  "content_sha256": "d380fbb36c0b9064f690c8024de9a2671fba096ad60484e424f637fd58195c96",
   "apps": [
     {
       "id": "formai",
@@ -687,10 +687,10 @@
         "skills": ""
       },
       "release": {
-        "version": "0.31.0",
-        "tag": "v0.31.0",
-        "published": "2026-11-25T21:09:56Z",
-        "url": "https://github.com/nodemode-dev/formmorpheus/releases/tag/v0.31.0",
+        "version": "0.36.0",
+        "tag": "v0.36.0",
+        "published": "2026-11-28T05:35:49Z",
+        "url": "https://github.com/nodemode-dev/formmorpheus/releases/tag/v0.36.0",
         "skills": []
       }
     },
@@ -1482,10 +1482,10 @@
         "skills": ".claude/skills"
       },
       "release": {
-        "version": "0.34.0",
-        "tag": "v0.34.0",
-        "published": "2026-11-27T23:41:07Z",
-        "url": "https://github.com/nodemode-dev/formweb/releases/tag/v0.34.0",
+        "version": "0.36.0",
+        "tag": "v0.36.0",
+        "published": "2026-11-28T05:35:50Z",
+        "url": "https://github.com/nodemode-dev/formweb/releases/tag/v0.36.0",
         "skills": [
           "formweb-editing",
           "formweb-harness",
